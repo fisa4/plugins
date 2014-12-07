@@ -1,4 +1,4 @@
-### i-MSCP RemoteBridge plugin v0.0.9
+### i-MSCP RemoteBridge plugin v0.0.5
 
 Plugin providing an API which allows to manage i-MSCP accounts.
 
@@ -89,7 +89,7 @@ Plugin compatible with i-MSCP versions >= 1.1.0
 
 **1.** action (required)
 
-	- This actions are available: create, terminate, suspend, unsuspend, addalias
+	- This actions are available: get_user, create_user, enable_user, disable_user, delete_user, collect_usagedata, update_dmn, add_alias, get_mail, add_mail
 
 **1.1.** action create
 

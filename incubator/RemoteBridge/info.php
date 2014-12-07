@@ -29,7 +29,7 @@
 return array(
 	'author' => 'Sascha Bay',
 	'email' => 'info@space2place.de',
-	'version' => '0.0.9',
+	'version' => '0.0.5',
 	'date' => '2014-12-07',
 	'name' => 'RemoteBridge',
 	'desc' => 'Plugin providing an API which allows to manage i-MSCP accounts.',

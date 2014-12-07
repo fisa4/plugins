@@ -22,13 +22,19 @@
  * @subpackage  RemoteBridge
  * @copyright   2010-2014 by i-MSCP Team
  * @author      Sascha Bay <info@space2place.de>
+ * @author      Peter Ziergöbel <info@fisa4.de>
+ * @author      Ninos Ego <me@ninosego.de>
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
 
 return array(
-	'author' => 'Sascha Bay',
-	'email' => 'info@space2place.de',
+	'author' => array(
+		'Sascha Bay',
+		'Peter Ziergöbel',
+		'Ninos Ego'
+	),
+	'email' => 'team@i-mscp.net',
 	'version' => '0.0.5',
 	'date' => '2014-12-07',
 	'name' => 'RemoteBridge',

@@ -22,6 +22,8 @@
  * @subpackage  RemoteBridge
  * @copyright   2010-2014 by i-MSCP Team
  * @author      Sascha Bay <info@space2place.de>
+ * @author      Peter Ziergöbel <info@fisa4.de>
+ * @author      Ninos Ego <me@ninosego.de>
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
@@ -30,7 +32,7 @@
  * Decrypt POST data
  *
  * @param string $bridgeKey
- * @param string $ipaddress IP Adresse
+ * @param string $ipaddress IP address
  * @param string $encryptedData Encrypted data
  * @return mixed
  */

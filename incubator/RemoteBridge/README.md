@@ -1,4 +1,4 @@
-### i-MSCP RemoteBridge plugin v0.0.5
+## i-MSCP RemoteBridge plugin v0.0.5
 
 Plugin providing an API which allows to manage i-MSCP accounts.
 
@@ -89,45 +89,49 @@ Plugin compatible with i-MSCP versions >= 1.1.0
 
 **1.** action (required)
 
-	- This actions are available: get_user, create_user, enable_user, disable_user, delete_user, collect_usagedata, update_dmn, add_alias, get_mail, add_mail
+	- This actions are available: get_users, create_user, enable_user, disable_user, delete_user, update_dmn, add_alias, get_mails, add_mail, collectusagedata
 
-**1.1.** action create
+**1.1.** action get_users
 
-	- creates a new i-MSCP acount
+	- Gets all i-MSCP accounts
 
-**1.2.** action update_dmn
+**1.2.** action create_user
 
-	- updates existing domain on i-MSCP 
+	- Creates a new i-MSCP account
 
-**1.3.** action terminate_dmn
+**1.3.** action enable_user
 
-	- deletes an existing i-MSCP acount
+	- Enables an existing i-MSCP account
 
-**1.4.** action suspend_dmn
+**1.4.** action disable_user
 
-	- disables an existing i-MSCP acount
+	- Disables an existing i-MSCP account
 
-**1.5.** action unsuspend_dmn
+**1.5.** action delete_user
 
-	- enables an existing i-MSCP acount
+	- Deletes an existing i-MSCP account
 
-**1.6.** action add_alias
+**1.6.** action update_dmn
 
-	- Adds a new domain alias to an existing i-MSCP acount
+	- Updates domain of an existing i-MSCP account
 
-**1.7.** action get_user
+**1.7.** action add_alias
 
-	- get all users from a reseller
+	- Adds a new domain alias to an existing i-MSCP account
 
-**1.8.** action add_mail
+**1.8.** action get_mails
 
-        - adds mailaddress (mailbox and/or mail forwarding) to a domain
+	- Gets all mail accounts of an existing i-MSCP account
 
-**1.9.** action get_mail
+**1.9.** action add_mail
 
-        - get mailaccounts of a domain
+	- Adds a new mail account to an existing i-MSCP account
 
-***2.** reseller_username (required)
+**1.10.** action collectusagedata
+
+	- Collects all usage data of an existing i-MSCP account
+
+**2.** reseller_username (required)
 
 	- value: Username of the reseller account
 
@@ -251,6 +255,10 @@ Plugin compatible with i-MSCP versions >= 1.1.0
 
 	- (must be an array), array('alias1.tld', 'alias2.tld')
 
+**9.** mail_quota
+
+	- value: numeric in MB, 0 (unlimited)
+
 ### Customer data variable which are available
 
 	- fname: first name
@@ -264,11 +272,12 @@ Plugin compatible with i-MSCP versions >= 1.1.0
 	- fax: fax number
 	- street1: street
 	- street2: additional street informations
-	- gender: value can be "U=unknown F=female, M=male"
+	- gender: value can be "U=unknown, F=female, M=male"
 
 ### AUTHORS AND CONTRIBUTORS
 
  * Sascha Bay <info@space2place.de> (Author)
  * Peter Ziergöbel <info@fisa4.de> (Contributor)
+ * Ninos Ego <me@ninosego.de> (Contributor)
 
 **Thank you for using this plugin.**

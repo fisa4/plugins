@@ -28,11 +28,11 @@
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
 
-include_once('remotebridge/core.php');
-include_once('remotebridge/user.php');
-include_once('remotebridge/domain.php');
-include_once('remotebridge/alias.php');
-include_once('remotebridge/mail.php');
+include_once('remotebridge.core.php');
+include_once('remotebridge.user.php');
+include_once('remotebridge.domain.php');
+include_once('remotebridge.alias.php');
+include_once('remotebridge.mail.php');
 
 $filter = iMSCP_Registry::set(
 	'bufferFilter',

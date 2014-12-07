@@ -22,6 +22,7 @@
  * @subpackage  RemoteBridge
  * @copyright   2010-2014 by i-MSCP Team
  * @author      Sascha Bay <info@space2place.de>
+ * @author      Ninos Ego <me@ninosego.de>
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
@@ -33,6 +34,7 @@
  * @package     iMSCP_Plugin
  * @subpackage  RemoteBridge
  * @author      Sascha Bay <info@space2place.de>
+ * @author      Ninos Ego <me@ninosego.de>
  */
 class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 {
@@ -145,7 +147,12 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 
 		return array(
 			'/reseller/remotebridge.php' => $pluginDir . '/frontend/remotebridge.php',
-			'/remotebridge.php' => $pluginDir . '/public/remotebridge.php'
+			'/remotebridge.php' => $pluginDir . '/public/remotebridge.php',
+			'/remotebridge.core.php' => $pluginDir . '/public/remotebridge.core.php',
+			'/remotebridge.user.php' => $pluginDir . '/public/remotebridge.user.php',
+			'/remotebridge.domain.php' => $pluginDir . '/public/remotebridge.domain.php',
+			'/remotebridge.alias.php' => $pluginDir . '/public/remotebridge.alias.php',
+			'/remotebridge.mail.php' => $pluginDir . '/public/remotebridge.mail.php'
 		);
 	}
 

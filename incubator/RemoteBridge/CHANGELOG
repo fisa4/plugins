@@ -7,8 +7,8 @@ Version 0.0.5
 
 	- Added: Get all i-MSCP accounts
 		- action 'get_users'
-	- Added: Update domain of an existing i-MSCP account
-		- action 'update_dmn'
+	- Added: Update an existing i-MSCP account
+		- action 'update_user'
 	- Added: Get all mail accounts of an existing i-MSCP account
 		- action 'get_mails'
 	- Added: Add a new mail account to an existing i-MSCP account

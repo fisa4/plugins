@@ -30,7 +30,6 @@
 
 include_once('remotebridge.core.php');
 include_once('remotebridge.user.php');
-include_once('remotebridge.domain.php');
 include_once('remotebridge.alias.php');
 include_once('remotebridge.mail.php');
 
@@ -120,7 +119,7 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 			deleteUser($resellerId, $postData['domain']);
 
 			break;
-		case 'update_dmn':
+		case 'update_user':
 			 $resellerHostingPlan = (isset($postData['hosting_plan']))
 					? checkResellerHostingPlan($resellerId, $postData['hosting_plan']) : array();
 
@@ -130,7 +129,7 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 					checkLimitsPostData($postData, $resellerId);
 			}
 
-			updateDomain($resellerId, $resellerHostingPlan, $resellerIpaddress, $postData);
+			updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $postData);
 
 			break; 
 		case 'add_alias':

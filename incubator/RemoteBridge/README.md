@@ -89,7 +89,7 @@ Plugin compatible with i-MSCP versions >= 1.1.0
 
 **1.** action (required)
 
-	- This actions are available: get_users, create_user, enable_user, disable_user, delete_user, update_dmn, add_alias, get_mails, add_mail, collectusagedata
+	- This actions are available: get_users, create_user, enable_user, disable_user, delete_user, update_user, add_alias, get_mails, add_mail, collectusagedata
 
 **1.1.** action get_users
 
@@ -111,9 +111,9 @@ Plugin compatible with i-MSCP versions >= 1.1.0
 
 	- Deletes an existing i-MSCP account
 
-**1.6.** action update_dmn
+**1.6.** action update_user
 
-	- Updates domain of an existing i-MSCP account
+	- Updates an existing i-MSCP account
 
 **1.7.** action add_alias
 

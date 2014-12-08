@@ -111,7 +111,7 @@ function addMailAccount($resellerId, $postData)
 	$cfg = iMSCP_Registry::get('config');
 	$auth = iMSCP_Authentication::getInstance();
 
-	if (empty($postData['domain']) || empty($postData['account']) || empty($postData['newmailpass']) || ( empty($postData['quota']) && $postData['quota'] != 0) || empty($postData['account_type'])) {
+	if (empty($postData['domain']) || empty($postData['account']) || empty($postData['mail_pass']) || ( empty($postData['quota']) && $postData['quota'] != 0) || empty($postData['account_type'])) {
 		logoutReseller();
 		exit(
 			createJsonMessage(
@@ -126,10 +126,38 @@ function addMailAccount($resellerId, $postData)
 	$domain = encode_idna( strtolower($postData['domain']) );
 	$account = (isset($postData['account'])) ? clean_input($postData['account']) : '';
 	$address = (!empty($account)) ? $account . '@' . $domain : '';
-	$pass = (isset($postData['newmailpass'])) ? clean_input($postData['newmailpass']) : '';
+	$pass = (isset($postData['mail_pass'])) ? clean_input($postData['mail_pass']) : '';
 	$account_type = (isset($postData['account_type'])) ? explode(',', clean_input($postData['account_type'])) : array('normal_mail');
 	$quota = (isset($postData['quota'])) ? clean_input($postData['quota']) * 1024*1024 : '0';
 	$forwardList = (isset($postData['mail_forward']) && in_array('normal_forward', $account_type)) ? explode(',', clean_input($postData['mail_forward'])) : '';
+
+	remoteBridgecheckPasswordSyntax($pass);
+	foreach ($forwardList as $key => &$forwardEmailAddr) {
+		$forwardEmailAddr = encode_idna(trim($forwardEmailAddr));
+		if (empty($forwardEmailAddr)) {
+			unset($forwardList[$key]);
+		} elseif (!chk_email($forwardEmailAddr)) {
+			logoutReseller();
+			exit(
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => 'Wrong mail syntax in forward list.'
+					)
+				)
+			);
+		} elseif ($forwardEmailAddr == $address) {
+			logoutReseller();
+			exit(
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf('You cannot forward %s on itself.', $address)
+					)
+				)
+			);
+		}
+	}
 
 	$query = '
 		SELECT
@@ -226,7 +254,7 @@ function addMailAccount($resellerId, $postData)
 			array(
 				$account,
 				$pass,
-				implode(',', $forwardList),
+				implode(',', array_unique($forwardList)),
 				$domainId,
 				$account_type,
 				'0',

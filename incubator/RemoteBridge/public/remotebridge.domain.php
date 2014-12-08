@@ -46,10 +46,10 @@ function updateDomain($resellerId, $resellerHostingPlan, $resellerIpaddress, $po
 	if (empty($postData['domain'])) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-		array(
-		'level' => 'Error',
-		'message' => 'No domain in post data available.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'No domain in post data available.'
 				)
 			)
 		);
@@ -224,7 +224,8 @@ function updateDomain($resellerId, $resellerHostingPlan, $resellerIpaddress, $po
 	}
 	catch (iMSCP_Exception_Database $e) {
 		$db->rollBack();
-		echo(
+		logoutReseller();
+		exit(
 			createJsonMessage(
 				array(
 					'level' => 'Error',
@@ -234,15 +235,13 @@ function updateDomain($resellerId, $resellerHostingPlan, $resellerIpaddress, $po
 				)
 			)
 		);
-		logoutReseller();
-		exit;
 	}
 
 	echo(
 		createJsonMessage(
 			array(
-			'level' => 'Success',
-			'message' => sprintf('User %s update successfull.', $domain)
+				'level' => 'Success',
+				'message' => sprintf('User %s update successfull.', $domain)
 			)
 		)
 	);

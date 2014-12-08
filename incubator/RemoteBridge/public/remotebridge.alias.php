@@ -44,12 +44,12 @@ function addAliasDomain($resellerId, $resellerIpaddress, $postData)
 	if (empty($postData['domain']) || count($postData['alias_domains']) == 0) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'No domain or domain aliases in post data available.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'No domain or domain aliases in post data available.'
+				)
 			)
-		)
 		);
 	}
 
@@ -72,24 +72,24 @@ function addAliasDomain($resellerId, $resellerIpaddress, $postData)
 		$customerId = $stmt->fields['domain_admin_id'];
 		createAliasDomain($resellerId, $customerId, $resellerIpaddress, $postData);
 		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Success',
-				'message' => sprintf(
-					'Domain aliases: %s succesfully added.',
-					implode(', ', $postData['alias_domains'])
+			createJsonMessage(
+				array(
+					'level' => 'Success',
+					'message' => sprintf(
+						'Domain aliases: %s succesfully added.',
+						implode(', ', $postData['alias_domains'])
+					)
 				)
 			)
-		)
 		);
 	} else {
 		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('Unknown domain %s.', $domain)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Unknown domain %s.', $domain)
+				)
 			)
-		)
 		);
 	}
 }
@@ -116,24 +116,24 @@ function createAliasDomain($resellerId, $customerDmnId, $domain_ip_id, $postData
 		if (!isValidDomainName(decode_idna($alias_domain))) {
 			logoutReseller();
 			exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('The alias domain %s is not valid.', $aliasdomain)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf('The alias domain %s is not valid.', $aliasdomain)
+					)
 				)
-			)
 			);
 		}
 
 		if (imscp_domain_exists($alias_domain, $resellerId)) {
 			logoutReseller();
 			exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('Alias domain %s already exist on this server.', $aliasdomain)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf('Alias domain %s already exist on this server.', $aliasdomain)
+					)
 				)
-			)
 			);
 		}
 
@@ -207,21 +207,20 @@ function createAliasDomain($resellerId, $customerDmnId, $domain_ip_id, $postData
 
 		} catch (iMSCP_Exception_Database $e) {
 			$db->rollBack();
-			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf(
-						'Error while creating alias domain: %s, %s, %s',
-						$e->getMessage(),
-						$e->getQuery(),
-						$e->getCode()
+			logoutReseller();
+			exit(
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf(
+							'Error while creating alias domain: %s, %s, %s',
+							$e->getMessage(),
+							$e->getQuery(),
+							$e->getCode()
+						)
 					)
 				)
-			)
 			);
-			logoutReseller();
-			exit;
 		}
 
 		send_request();

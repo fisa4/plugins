@@ -39,76 +39,76 @@
 function getMailList($resellerId, $domain)
 {
 	if (empty($domain)) {
-                logoutReseller();
-                exit(
-                createJsonMessage(
-                array(
-                'level' => 'Error',
-                'message' => 'No domain in post data available.'
-                                )
-                        )
-                );
-        }
-        
-        $domain = strtolower($domain);
-        $dmnUsername = encode_idna($domain);
+		logoutReseller();
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'No domain in post data available.'
+				)
+			)
+		);
+	}
 
-        if (! imscp_domain_exists($dmnUsername, $resellerId)) {
-                logoutReseller();
-                exit(
-                        createJsonMessage(
-                                array(
-                                        'level' => 'Error',
-                                        'message' => sprintf('Domain %s not exist on this server.', $domain)
-                                )
-                        )
-                );
-        }
+	$domain = strtolower($domain);
+	$dmnUsername = encode_idna($domain);
+
+	if (! imscp_domain_exists($dmnUsername, $resellerId)) {
+		logoutReseller();
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Domain %s not exist on this server.', $domain)
+				)
+			)
+		);
+	}
+
 	$query = '
-                SELECT
-                        domain_id,
-                        domain_admin_id
-                FROM
-                        domain
-                WHERE
-                        domain_name = ?
-        ';
-        $stmt = exec_query($query, $domain);
-        $domainId = $stmt->fields['domain_id'];
+		SELECT
+			domain_id,
+			domain_admin_id
+		FROM
+			domain
+		WHERE
+			domain_name = ?
+	';
+	$stmt = exec_query($query, $domain);
+	$domainId = $stmt->fields['domain_id'];
+
 	$query = '
-                SELECT
-				`mail_addr`
-			FROM
-				`mail_users`
-			WHERE
-				`domain_id` = ?
-        ';
+		SELECT
+			`mail_addr`
+		FROM
+			`mail_users`
+		WHERE
+			`domain_id` = ?
+	';
+	$stmt = exec_query($query, $domainId);
 
-                $stmt = exec_query($query, $domainId);
+	if (!$stmt->rowCount()) {
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('No admin data available.')
+				)
+			)
+		);
+	}
 
-        if (!$stmt->rowCount()) {
-                exit(
-                createJsonMessage(
-                        array(
-                                'level' => 'Error',
-                                'message' => sprintf('No admin data available.')
-                        )
-                                )
-                );
-        } else {
-                $result = $stmt->fetchAll();
+	$result = $stmt->fetchAll();
 
-                echo(
-                createJsonMessage(
-                        array(
-                                'level' => 'Success',
-                                'message' => sprintf('Mailaccount list for domain %s successfully generated.', $domain),
-                                'data' => $result
-                        )
-                )
-                );
-
-        }
+	echo(
+		createJsonMessage(
+			array(
+				'level' => 'Success',
+				'message' => sprintf('Mail account list for domain %s successfully generated.', $domain),
+				'data' => $result
+			)
+		)
+	);
 }
 
 /**
@@ -132,12 +132,12 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 	if (empty($domain) || empty($account) || empty($newmailpass) || $quota == '' || empty($account_type)) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'Hello, no domain ('.$domain.'), Quota ('.$quota.'), users new email accountname ('.$account.'), email password ('.$newmailpass.') or account type ('.$account_type.') in post data available.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'No domain ('.$domain.'), Quota ('.$quota.'), users new email accountname ('.$account.'), email password ('.$newmailpass.') or account type ('.$account_type.') in post data available.'
+				)
 			)
-		)
 		);
 	}
 
@@ -161,21 +161,21 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 			domain_name = ?
 	';
 	$stmt = exec_query($query, $domain);
-	$domainId = $stmt->fields['domain_id'];
-        $domainAdminId = $stmt->fields['domain_admin_id'];
 
-        $stmt = exec_query("SELECT `mail_id` FROM `mail_users` WHERE `mail_addr` = ?", $newEmail);
+	$domainId = $stmt->fields['domain_id'];
+	$domainAdminId = $stmt->fields['domain_admin_id'];
+
+	$stmt = exec_query("SELECT `mail_id` FROM `mail_users` WHERE `mail_addr` = ?", $newEmail);
 	if ($stmt->rowCount()) {
-	logoutReseller();
-        exit(
-        createJsonMessage(
-                array(
-                        'level' => 'Error',
-                        'message' => sprintf('Mailaddress: %s already in use.', $newEmail)
-                )
-        )
-        );
-	
+		logoutReseller();
+		exit(
+			createJsonMessage(
+				array(
+						'level' => 'Error',
+						'message' => sprintf('Mail address: %s already in use.', $newEmail)
+				)
+			)
+		);
 	}
 
 	if (($account_type == 'normal_forward' || $account_type == 'normal_mail,normal_forward') && empty($mail_forward)) {
@@ -190,44 +190,39 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 		);
 	}
 
-        $domainProperties = get_domain_default_props($domainAdminId);
-        $domainQuota = $domainProperties['mail_quota'];
+	$domainProperties = get_domain_default_props($domainAdminId);
+	$domainQuota = $domainProperties['mail_quota'];
 	$domainMails = $domainProperties['domain_mailacc_limit'];
-	
+
 	$stmt = exec_query("SELECT `mail_id` FROM `mail_users` WHERE `domain_id` = ?", $domainId);
 	$domainCurrentAccounts = $stmt->rowCount();
 
 	if($domainMails <= $domainCurrentAccounts && $domainMails > '0'){
 		logoutReseller();
-        	exit(
-        	createJsonMessage(
-                	array(
-                        	'level' => 'Error',
-                        	'message' => sprintf('Cannot add account: %s - You have already used all available Mailaccounts.', $newEmail)
-                	)
-        	)
-        	);
-
-
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Cannot add account: %s - You have already used all available Mailaccounts.', $newEmail)
+				)
+			)
+		);
 	}
-	
+
 	$stmt = exec_query("SELECT SUM(`quota`) AS `quota` FROM `mail_users` WHERE `domain_id` = ? AND quota IS NOT NULL", $domainId);
 	$domainCurrentQuota = $stmt->fields['quota'];
 
-	if($domainQuota < $domainCurrentQuota + $quota && $domainQuota > '0'){
+	if($domainQuota < $domainCurrentQuota + $quota && $domainQuota > '0') {
 		logoutReseller();
-        	exit(
-        	createJsonMessage(
-                	array(
-                        	'level' => 'Error',
-                        	'message' => sprintf('Cannot add account: %s - Not enough quota left.', $newEmail)
-                	)
-        	)
-        	);
-
-
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Cannot add account: %s - Not enough quota left.', $newEmail)
+				)
+			)
+		);
 	}
-
 
 	try {
 		$db->beginTransaction();
@@ -240,29 +235,38 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 		);
 		
 		$query = '
-				INSERT INTO `mail_users` (
-					`mail_acc`, `mail_pass`, `mail_forward`, `domain_id`, `mail_type`, `sub_id`, `status`,
-					`mail_auto_respond`, `mail_auto_respond_text`, `quota`, `mail_addr`
-				) VALUES
-					(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-			';
-			exec_query(
-				$query,
-				array(
-					$account, $newEmailPass, $forwardList, $domainId, $account_type, '0',
-					'toadd', '0', NULL, $quota, $newEmail
-				)
-			);
+			INSERT INTO `mail_users` (
+				`mail_acc`, `mail_pass`, `mail_forward`, `domain_id`, `mail_type`, `sub_id`, `status`,
+				`mail_auto_respond`, `mail_auto_respond_text`, `quota`, `mail_addr`
+			) VALUES
+				(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		';
+		exec_query(
+			$query,
+			array(
+				$account,
+				$newEmailPass,
+				$forwardList,
+				$domainId,
+				$account_type,
+				'0',
+				'toadd',
+				'0',
+				NULL,
+				$quota,
+				$newEmail
+			)
+		);
 		$recordId = $db->insertId();
 
 		iMSCP_Events_Manager::getInstance()->dispatch(
 			iMSCP_Events::onAfterAddMail,
-			array('
-				mailUsername' => $account, 
+			array(
+				'mailUsername' => $account, 
 				'mailAddress' => $newEmail, 
 				'mailId' => $recordId)
 		);
-		
+
 		send_request();
 
 		write_log(
@@ -277,26 +281,25 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 
 	} catch (iMSCP_Exception_Database $e) {
 		$db->rollBack();
-		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf(
-					'Error while creating New Mail: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
+		logoutReseller();
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf(
+						'Error while creating New Mail: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
+					)
 				)
 			)
-		)
 		);
-		logoutReseller();
-		exit;
 	}
 
 	echo(
-	createJsonMessage(
-		array(
-			'level' => 'Success',
-			'message' => sprintf('New email address %s added successfull.', $newEmail)
+		createJsonMessage(
+			array(
+				'level' => 'Success',
+				'message' => sprintf('New email address %s added successful.', $newEmail)
+			)
 		)
-	)
 	);
 }

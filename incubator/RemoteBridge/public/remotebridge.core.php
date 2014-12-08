@@ -42,12 +42,12 @@ function decryptPostData($bridgeKey, $ipaddress, $encryptedData)
 
 	if ($resName === false) {
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'No data in your post vars available.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'No data in your post vars available.'
+				)
 			)
-		)
 		);
 	}
 
@@ -65,12 +65,12 @@ function decryptPostData($bridgeKey, $ipaddress, $encryptedData)
 
 	if (count($decryptedData) == 0 || $decryptedData == '') {
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'No data in your post vars available.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'No data in your post vars available.'
+				)
 			)
-		)
 		);
 	}
 
@@ -120,15 +120,15 @@ function checkiMSCP_Version()
 
 	if (version_compare($cfg->Version, '1.1.0', '<')) {
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf(
-					'iMSCP version %s is not compatible with the remote bridge. Try with a newest version.',
-					$cfg->Version
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf(
+						'iMSCP version %s is not compatible with the remote bridge. Try with a newest version.',
+						$cfg->Version
+					)
 				)
 			)
-		)
 		);
 	}
 }
@@ -148,12 +148,12 @@ function checkRemoteIpaddress($ipaddress)
 
 	if ($stmt->fields['cnt'] == 0) {
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('Your IP address %s does not have access to the remote bridge.', $ipaddress)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Your IP address %s does not have access to the remote bridge.', $ipaddress)
+				)
 			)
-		)
 		);
 	}
 }
@@ -181,29 +181,28 @@ function checkResellerLoginData($reseller_username, $reseller_password)
 			->setPassword(clean_input($reseller_password))->authenticate();
 
 		if (!$result->isValid()) {
-			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => format_message($result->getMessages())
-				)
-			)
-			);
-
 			write_log(
 				sprintf("Authentication via remote bridge failed. Reason: %s", format_message($result->getMessages())),
 				E_USER_NOTICE
 			);
-			exit;
+
+			exit(
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => format_message($result->getMessages())
+					)
+				)
+			);
 		}
 	} else {
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'Login data are missing.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'Login data are missing.'
+				)
 			)
-		)
 		);
 	}
 
@@ -252,17 +251,15 @@ function checkResellerHostingPlan($resellerId, $hosting_plan)
 	$props = $data['props'];
 
 	if (!$data) {
-		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('No such hosting plan named: %s.', $hosting_plan)
-			)
-		)
-		);
-
 		logoutReseller();
-		exit;
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('No such hosting plan named: %s.', $hosting_plan)
+				)
+			)
+		);
 	}
 
 	$result = array_combine(
@@ -537,12 +534,12 @@ function sendPostDataError($postVar, $errorMessage)
 	logoutReseller();
 
 	exit(
-	createJsonMessage(
-		array(
-			'level' => 'Error',
-			'message' => sprintf('Post variable: %s : %s.', $postVar, $errorMessage)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('Post variable: %s : %s.', $postVar, $errorMessage)
+			)
 		)
-	)
 	);
 }
 
@@ -558,17 +555,15 @@ function checkResellerAssignedIP($resellerId)
 	$data = $stmt->fetchRow();
 
 	if (!$data) {
-		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'Reseller does not have any IP address assigned.'
-			)
-		)
-		);
-
 		logoutReseller();
-		exit;
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'Reseller does not have any IP address assigned.'
+				)
+			)
+		);
 	}
 
 	$ips = explode(';', $data['reseller_ips']);
@@ -576,17 +571,15 @@ function checkResellerAssignedIP($resellerId)
 	if (array_key_exists('0', $ips)) {
 		return $ips[0];
 	} else {
-		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'Cannot retrieve reseller IP address.'
-			)
-		)
-		);
-
 		logoutReseller();
-		exit;
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'Cannot retrieve reseller IP address.'
+				)
+			)
+		);
 	}
 }
 
@@ -629,49 +622,49 @@ function remoteBridgecheckPasswordSyntax($password, $unallowedChars = '')
 	if ($passwordLength < $cfg->PASSWD_CHARS) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('Password is shorter than %s characters.', $cfg->PASSWD_CHARS)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Password is shorter than %s characters.', $cfg->PASSWD_CHARS)
+				)
 			)
-		)
 		);
 	} elseif ($passwordLength > 30) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'Password cannot be greater than 30 characters.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'Password cannot be greater than 30 characters.'
+				)
 			)
-		)
 		);
 	}
 
 	if (!empty($unallowedChars) && preg_match($unallowedChars, $password)) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'Password includes not permitted signs.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'Password includes not permitted signs.'
+				)
 			)
-		)
 		);
 	}
 
 	if ($cfg->PASSWD_STRONG && !(preg_match('/[0-9]/', $password) && preg_match('/[a-zA-Z]/', $password))) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf(
-					'Password must be at least %s character long and contain letters and numbers to be valid.',
-					$cfg->PASSWD_CHARS
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf(
+						'Password must be at least %s character long and contain letters and numbers to be valid.',
+						$cfg->PASSWD_CHARS
+					)
 				)
 			)
-		)
 		);
 	}
 }

@@ -46,12 +46,12 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	if (empty($postData['domain']) || empty($postData['admin_pass']) || empty($postData['email'])) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => 'No domain, user password, or user emailaddress in post data available.'
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => 'No domain, user password, or user emailaddress in post data available.'
+				)
 			)
-		)
 		);
 	}
 
@@ -63,31 +63,29 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	if (!isValidDomainName($dmnUsername)) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('The domain %s is not valid.', $domain)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('The domain %s is not valid.', $domain)
+				)
 			)
-		)
 		);
 	}
 
 	if (imscp_domain_exists($dmnUsername, $resellerId)) {
 		logoutReseller();
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('Domain %s already exist on this server.', $domain)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Domain %s already exist on this server.', $domain)
+				)
 			)
-		)
 		);
 	}
 
 	$pure_user_pass = urldecode($postData['admin_pass']);
 	$admin_pass = cryptPasswordWithSalt($pure_user_pass);
-	//$admin_type = 'user';
-	//$created_by = $resellerId;
 	$fname = (isset($postData['fname'])) ? clean_input(urldecode($postData['fname'])) : '';
 	$lname = (isset($postData['lname'])) ? clean_input(urldecode($postData['lname'])) : '';
 	$firm = (isset($postData['firm'])) ? clean_input(urldecode($postData['firm'])) : '';
@@ -281,18 +279,17 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 
 	} catch (iMSCP_Exception_Database $e) {
 		$db->rollBack();
-		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf(
-					'Error while creating user: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
+		logoutReseller();
+		exit(
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf(
+						'Error while creating user: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
+					)
 				)
 			)
-		)
 		);
-		logoutReseller();
-		exit;
 	}
 
 	if (isset($postData['alias_domains']) && count($postData['alias_domains']) > 0) {
@@ -300,12 +297,12 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	}
 
 	echo(
-	createJsonMessage(
-		array(
-			'level' => 'Success',
-			'message' => sprintf('User %s added successfull.', $domain)
+		createJsonMessage(
+			array(
+				'level' => 'Success',
+				'message' => sprintf('User %s added successfull.', $domain)
+			)
 		)
-	)
 	);
 }
 
@@ -341,24 +338,23 @@ function deleteUser($resellerId, $domain)
 		$customerId = $stmt->fields['domain_admin_id'];
 		try {
 			if (!deleteCustomer($customerId, true)) {
-				echo(
-				createJsonMessage(
-					array(
-						'level' => 'Error',
-						'message' => sprintf('Customer account %s not found.', $domain)
-					)
-				)
-				);
 				logoutReseller();
-				exit;
+				exit(
+					createJsonMessage(
+						array(
+							'level' => 'Error',
+							'message' => sprintf('Customer account %s not found.', $domain)
+						)
+					)
+				);
 			}
 			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Success',
-					'message' => sprintf('Customer account: %s successfully scheduled for deletion.', $domain)
+				createJsonMessage(
+					array(
+						'level' => 'Success',
+						'message' => sprintf('Customer account: %s successfully scheduled for deletion.', $domain)
+					)
 				)
-			)
 			);
 			write_log(
 				sprintf('%s scheduled deletion of the customer account: %s',
@@ -376,28 +372,27 @@ function deleteUser($resellerId, $domain)
 				),
 				E_USER_ERROR
 			);
-			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf(
-						'System was unable to schedule deletion of the customer account: %s.', $domain
-					)
-				)
-			)
-			);
 
 			logoutReseller();
-			exit;
+			exit(
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf(
+							'System was unable to schedule deletion of the customer account: %s.', $domain
+						)
+					)
+				)
+			);
 		}
 	} else {
 		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('Unknown domain %s.', $domain)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Unknown domain %s.', $domain)
+				)
 			)
-		)
 		);
 	}
 }
@@ -444,35 +439,35 @@ function disableUser($resellerId, $domain)
 				E_USER_NOTICE
 			);
 			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Success',
-					'message' => sprintf('Domain %s succesfully disabled.', $domain)
+				createJsonMessage(
+					array(
+						'level' => 'Success',
+						'message' => sprintf('Domain %s succesfully disabled.', $domain)
+					)
 				)
-			)
 			);
 		} else {
 			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf(
-						'Cannot disable domain %s. Current domain status is: %s.',
-						$domain,
-						$stmt->fields['domain_status']
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf(
+							'Cannot disable domain %s. Current domain status is: %s.',
+							$domain,
+							$stmt->fields['domain_status']
+						)
 					)
 				)
-			)
 			);
 		}
 	} else {
 		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('Unknown domain %s.', $domain)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Unknown domain %s.', $domain)
+				)
 			)
-		)
 		);
 	}
 }
@@ -520,34 +515,34 @@ function enableUser($resellerId, $domain)
 			);
 
 			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Success',
-					'message' => sprintf('Domain %s succesfully activated.', $domain)
+				createJsonMessage(
+					array(
+						'level' => 'Success',
+						'message' => sprintf('Domain %s succesfully activated.', $domain)
+					)
 				)
-			)
 			);
 		} else {
 			echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf(
-						'Cannot activate domain %s. Current domain status is: %s.',
-						$domain, $stmt->fields['domain_status']
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf(
+							'Cannot activate domain %s. Current domain status is: %s.',
+							$domain, $stmt->fields['domain_status']
+						)
 					)
 				)
-			)
 			);
 		}
 	} else {
 		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('Unknown domain %s.', $domain)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('Unknown domain %s.', $domain)
+				)
 			)
-		)
 		);
 	}
 }
@@ -582,13 +577,13 @@ function collectUsageData($resellerId, $domain)
 
 	if (!$stmt->rowCount()) {
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => ($domain === 'all')
-					? sprintf('No usage data available.') : sprintf('Unknown domain %s.', $domain)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => ($domain === 'all')
+						? sprintf('No usage data available.') : sprintf('Unknown domain %s.', $domain)
+				)
 			)
-		)
 		);
 	} else {
 		$usageData = array();
@@ -625,24 +620,24 @@ function collectUsageData($resellerId, $domain)
 				);
 			} else {
 				exit(
-				createJsonMessage(
-					array(
-						'level' => 'Error',
-						'message' => sprintf('Error while collecting usage statistics for domain %s.', $domain)
+					createJsonMessage(
+						array(
+							'level' => 'Error',
+							'message' => sprintf('Error while collecting usage statistics for domain %s.', $domain)
+						)
 					)
-				)
 				);
 			}
 		}
 
 		echo(
-		createJsonMessage(
-			array(
-				'level' => 'Success',
-				'message' => sprintf('Usage statistics for domain %s successfully generated.', $domain),
-				'data' => $usageData
+			createJsonMessage(
+				array(
+					'level' => 'Success',
+					'message' => sprintf('Usage statistics for domain %s successfully generated.', $domain),
+					'data' => $usageData
+				)
 			)
-		)
 		);
 	}
 }
@@ -666,21 +661,22 @@ function getUserList($resellerId, $resellerName)
 			created_by = ?
 	';
 
-		$stmt = exec_query($query, $resellerId);
+	$stmt = exec_query($query, $resellerId);
 	
-	if (!$stmt->rowCount()) {
+	if ( !$stmt->rowCount() ) {
 		exit(
-		createJsonMessage(
-			array(
-				'level' => 'Error',
-				'message' => sprintf('No admin data available.')
-			)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('No admin data available.')
 				)
+			)
 		);
-	} else {
-		$result = $stmt->fetchAll();
-		
-		echo(
+	}
+
+	$result = $stmt->fetchAll();
+
+	echo(
 		createJsonMessage(
 			array(
 				'level' => 'Success',
@@ -688,7 +684,6 @@ function getUserList($resellerId, $resellerName)
 				'data' => $result
 			)
 		)
-		); 
+	);
 
-	}
 }

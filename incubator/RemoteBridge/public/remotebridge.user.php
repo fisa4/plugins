@@ -818,7 +818,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 	exec_query(
 		$query,
 		array(
-			$dmnExpire, $lastModified, $domain_mailacc_limit, 
+			$dmnExpire, time(), $domain_mailacc_limit, 
 			$domain_ftpacc_limit, $domain_traffic_limit, $domain_sqld_limit, 
 			$domain_sqlu_limit, $cfg->ITEM_TOCHANGE_STATUS,	$domain_alias_limit, $domain_subd_limit, 
 			$domain_ip_id, $domain_disk_limit, $domain_php, $domain_cgi, $allowbackup, 
@@ -899,7 +899,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 		createJsonMessage(
 			array(
 				'level' => 'Success',
-				'message' => sprintf('User %s update successfull.', $domain)
+				'message' => sprintf('User %s update successful.', $domain)
 			)
 		)
 	);

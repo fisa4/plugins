@@ -128,7 +128,7 @@ function addMailAccount($resellerId, $postData)
 	$address = (!empty($account)) ? $account . '@' . $domain : '';
 	$pass = (isset($postData['mail_pass'])) ? clean_input($postData['mail_pass']) : '';
 	$account_type = (isset($postData['account_type'])) ? explode(',', clean_input($postData['account_type'])) : array('normal_mail');
-	$quota = (isset($postData['quota'])) ? clean_input($postData['quota']) * 1024*1024 : '0';
+	$quota = (isset($postData['quota'])) ? clean_input($postData['quota']) * 1048576 : '0';
 	$forwardList = (isset($postData['mail_forward']) && in_array('normal_forward', $account_type)) ? explode(',', clean_input($postData['mail_forward'])) : '';
 
 	remoteBridgecheckPasswordSyntax($pass);
@@ -186,7 +186,7 @@ function addMailAccount($resellerId, $postData)
 		);
 	}
 
-	if ((in_array('normal_forward', $account_type) && ! count($forwardList)) {
+	if (in_array('normal_forward', $account_type) && ! count($forwardList)) {
 		logoutReseller();
 		exit(
 		createJsonMessage(

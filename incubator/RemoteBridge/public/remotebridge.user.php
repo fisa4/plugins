@@ -49,7 +49,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 			createJsonMessage(
 				array(
 					'level' => 'Error',
-					'message' => 'No domain, user password, or user emailaddress in post data available.'
+					'message' => 'No domain, user password, or user email address in post data available.'
 				)
 			)
 		);
@@ -646,11 +646,10 @@ function collectUsageData($resellerId, $domain)
  * Create user list
  *
  * @param $resellerId
- * @param $postData['reseller_name']
  * @return user list 
  */
 
-function getUserList($resellerId, $resellerName)
+function getUserList($resellerId)
 {
 	$query = '
 		SELECT
@@ -680,10 +679,9 @@ function getUserList($resellerId, $resellerName)
 		createJsonMessage(
 			array(
 				'level' => 'Success',
-				'message' => sprintf('User list for reseller %s successfully generated.', $resellerName),
+				'message' => sprintf('User list successfully generated.'),
 				'data' => $result
 			)
 		)
 	);
-
 }

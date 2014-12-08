@@ -52,19 +52,7 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 
 	switch ($action) {
 		case 'get_users':
-			if (empty($postData['reseller_username'])) {
-				logoutReseller();
-				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => 'No reseller name in post data available.'
-						)
-					)
-				);
-			}
-
-			getUserList($resellerId, $postData['reseller_username']);
+			getUserList($resellerId);
 
 			break;
 		case 'create': // Deprecated action name since 0.0.5
@@ -150,7 +138,7 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 			addAliasDomain($resellerId, $resellerIpaddress, $postData);
 			break;
 		case 'get_mails':
-			if (empty($postData['reseller_username']) || empty($postData['domain'])) {
+			if (empty($postData['domain'])) {
 				logoutReseller();
 				exit(
 					createJsonMessage(
@@ -166,19 +154,7 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 
 			break;
 		case 'add_mail':
-			if (empty($postData['domain']) || empty($postData['account']) || empty($postData['quota']) || empty($postData['newmailpass']) || empty($postData['account_type']) || empty($postData['mail_forward'])) {
-				logoutReseller();
-				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => 'One or more required $postData array values are missing'
-						)
-					)
-				);
-			}
-
-			addMailAccount($resellerId, $postData['domain'], $postData['account'], $postData['quota'], $postData['newmailpass'], $postData['account_type'], $postData['mail_forward']);
+			addMailAccount($resellerId, $postData);
 
 			break;
 		case 'collectusagedata':

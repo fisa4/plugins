@@ -29,27 +29,14 @@
  */
 
 /**
- * Create Mailaccount list of a domain
+ * Create mail account list of a domain
  *
  * @param $resellerId
  * @param $domain
  * @return Mailaccount list
  */
-
 function getMailList($resellerId, $domain)
 {
-	if (empty($domain)) {
-		logoutReseller();
-		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => 'No domain in post data available.'
-				)
-			)
-		);
-	}
-
 	$domain = strtolower($domain);
 	$dmnUsername = encode_idna($domain);
 
@@ -59,7 +46,7 @@ function getMailList($resellerId, $domain)
 			createJsonMessage(
 				array(
 					'level' => 'Error',
-					'message' => sprintf('Domain %s not exist on this server.', $domain)
+					'message' => sprintf('Domain %s does not exist on this server.', $domain)
 				)
 			)
 		);
@@ -115,41 +102,34 @@ function getMailList($resellerId, $domain)
  * Create mail account
  *
  * @param int $resellerId Reseller unique identifier
- * @param $domain Users domain name
- * @param $account Mailaccount name
- * @param $quota Mailbox quota
- * @param $newmailpass password for new mailaccount
- * @param $account_type Type of mailaccount 
- * @param $mail_forward Forwarding mailaddress
+ * @param array $postData POST data
  * @return void
  */
-function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $account_type, $mail_forward)
+function addMailAccount($resellerId, $postData)
 {
 	$db = iMSCP_Registry::get('db');
 	$cfg = iMSCP_Registry::get('config');
 	$auth = iMSCP_Authentication::getInstance();
 
-	if (empty($domain) || empty($account) || empty($newmailpass) || $quota == '' || empty($account_type)) {
+	if (empty($postData['domain']) || empty($postData['account']) || empty($postData['newmailpass']) || ( empty($postData['quota']) && $postData['quota'] != 0) || empty($postData['account_type'])) {
 		logoutReseller();
 		exit(
 			createJsonMessage(
 				array(
 					'level' => 'Error',
-					'message' => 'No domain ('.$domain.'), Quota ('.$quota.'), users new email accountname ('.$account.'), email password ('.$newmailpass.') or account type ('.$account_type.') in post data available.'
+					'message' => 'No domain, account, email password, quota, or account type in post data available.'
 				)
 			)
 		);
 	}
 
-	$domain = strtolower($domain);
-	$domain = encode_idna($domain);
-	$mailAccount = (isset($account)) ? clean_input($account) : '';
-	$newEmail = (isset($account)) ? clean_input($account.'@'.$domain) : '';
-	$newEmailPass = (isset($newmailpass)) ? clean_input($newmailpass) : '';
-        $account_type = (isset($account_type)) ? clean_input($account_type) : 'normal_mail';
-	$quota = (isset($quota)) ? clean_input($quota) : '0';
-	$quota = $quota * 1024*1024;
-	$forwardList = (isset($mail_forward)) ? clean_input($mail_forward) : '';;
+	$domain = encode_idna( strtolower($postData['domain']) );
+	$account = (isset($postData['account'])) ? clean_input($postData['account']) : '';
+	$address = (!empty($account)) ? $account . '@' . $domain : '';
+	$pass = (isset($postData['newmailpass'])) ? clean_input($postData['newmailpass']) : '';
+	$account_type = (isset($postData['account_type'])) ? explode(',', clean_input($postData['account_type'])) : array('normal_mail');
+	$quota = (isset($postData['quota'])) ? clean_input($postData['quota']) * 1024*1024 : '0';
+	$forwardList = (isset($postData['mail_forward']) && in_array('normal_forward', $account_type)) ? explode(',', clean_input($postData['mail_forward'])) : '';
 
 	$query = '
 		SELECT
@@ -165,26 +145,26 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 	$domainId = $stmt->fields['domain_id'];
 	$domainAdminId = $stmt->fields['domain_admin_id'];
 
-	$stmt = exec_query("SELECT `mail_id` FROM `mail_users` WHERE `mail_addr` = ?", $newEmail);
+	$stmt = exec_query("SELECT `mail_id` FROM `mail_users` WHERE `mail_addr` = ?", $address);
 	if ($stmt->rowCount()) {
 		logoutReseller();
 		exit(
 			createJsonMessage(
 				array(
 						'level' => 'Error',
-						'message' => sprintf('Mail address: %s already in use.', $newEmail)
+						'message' => sprintf('Mail address %s already in use.', $address)
 				)
 			)
 		);
 	}
 
-	if (($account_type == 'normal_forward' || $account_type == 'normal_mail,normal_forward') && empty($mail_forward)) {
+	if ((in_array('normal_forward', $account_type) && ! count($forwardList)) {
 		logoutReseller();
 		exit(
 		createJsonMessage(
 			array(
 				'level' => 'Error',
-				'message' => sprintf('Please add a forward address for the mailaddress: %s', $newEmail)
+				'message' => sprintf('Please add a forward address for the mail address %s', $address)
 				)
 			)
 		);
@@ -203,7 +183,7 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 			createJsonMessage(
 				array(
 					'level' => 'Error',
-					'message' => sprintf('Cannot add account: %s - You have already used all available Mailaccounts.', $newEmail)
+					'message' => sprintf('Cannot add account: %s - You have already used all available mail accounts.', $address)
 				)
 			)
 		);
@@ -218,7 +198,7 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 			createJsonMessage(
 				array(
 					'level' => 'Error',
-					'message' => sprintf('Cannot add account: %s - Not enough quota left.', $newEmail)
+					'message' => sprintf('Cannot add account: %s - Not enough quota left.', $address)
 				)
 			)
 		);
@@ -230,7 +210,7 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 			iMSCP_Events::onBeforeAddMail, 
 			array(
 				'mailUsername' => $account, 
-				'MailAddress' => $newEmail
+				'MailAddress' => $address
 			)
 		);
 		
@@ -245,8 +225,8 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 			$query,
 			array(
 				$account,
-				$newEmailPass,
-				$forwardList,
+				$pass,
+				implode(',', $forwardList),
 				$domainId,
 				$account_type,
 				'0',
@@ -254,7 +234,7 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 				'0',
 				NULL,
 				$quota,
-				$newEmail
+				$address
 			)
 		);
 		$recordId = $db->insertId();
@@ -263,8 +243,9 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 			iMSCP_Events::onAfterAddMail,
 			array(
 				'mailUsername' => $account, 
-				'mailAddress' => $newEmail, 
-				'mailId' => $recordId)
+				'mailAddress' => $address, 
+				'mailId' => $recordId
+			)
 		);
 
 		send_request();
@@ -272,7 +253,7 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 		write_log(
 			sprintf(
 				"%s add Mail: %s (for domain: %s) via remote bridge.",
-				decode_idna($auth->getIdentity()->admin_name), $newEmail, $domain
+				decode_idna($auth->getIdentity()->admin_name), $address, $domain
 			),
 			E_USER_NOTICE
 		);
@@ -298,7 +279,7 @@ function addMailAccount($resellerId, $domain, $account, $quota, $newmailpass, $a
 		createJsonMessage(
 			array(
 				'level' => 'Success',
-				'message' => sprintf('New email address %s added successful.', $newEmail)
+				'message' => sprintf('New email address %s added successful.', $address)
 			)
 		)
 	);

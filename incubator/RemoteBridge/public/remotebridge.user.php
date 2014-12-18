@@ -259,6 +259,8 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 				'domainId' => $dmnId
 			)
 		);
+		
+                send_add_user_auto_msg($resellerId, $dmnUsername, $postData['admin_pass'], $postData['fname'], $postData['lname'], "Customer"); // Needs i10n/i18n
 
 		send_request();
 

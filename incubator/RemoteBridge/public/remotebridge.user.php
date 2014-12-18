@@ -24,6 +24,8 @@
  * @author      Sascha Bay <info@space2place.de>
  * @author      Peter Ziergöbel <info@fisa4.de>
  * @author      Ninos Ego <me@ninosego.de>
+ * @author	Thom Heemstra <thom@heemstra.us>
+ * 
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
@@ -260,7 +262,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 			)
 		);
 		
-                send_add_user_auto_msg($resellerId, $dmnUsername, $postData['admin_pass'], $postData['fname'], $postData['lname'], "Customer"); // Needs i10n/i18n
+                send_add_user_auto_msg($resellerId, $dmnUsername, $pure_user_pass, $fname, $lname, "Customer"); // Needs i10n/i18n
 
 		send_request();
 

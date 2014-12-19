@@ -152,7 +152,10 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 			'/remotebridge.user.php' => $pluginDir . '/public/remotebridge.user.php',
 			'/remotebridge.domain.php' => $pluginDir . '/public/remotebridge.domain.php',
 			'/remotebridge.alias.php' => $pluginDir . '/public/remotebridge.alias.php',
-			'/remotebridge.mail.php' => $pluginDir . '/public/remotebridge.mail.php'
+			'/remotebridge.mail.php' => $pluginDir . '/public/remotebridge.mail.php',
+			'/remotebridge.database.php' => $pluginDir . '/public/remotebridge.database.php',
+			'/remotebridge.dns.php' => $pluginDir . '/public/remotebridge.dns.php',
+			'/remotebridge.ftp.php' => $pluginDir . '/public/remotebridge.ftp.php'
 		);
 	}
 

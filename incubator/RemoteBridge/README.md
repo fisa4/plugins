@@ -1,4 +1,4 @@
-## i-MSCP RemoteBridge plugin v0.0.5
+## i-MSCP RemoteBridge plugin v0.0.6
 
 Plugin providing an API which allows to manage i-MSCP accounts.
 
@@ -19,7 +19,7 @@ See [GPL v2](http://www.gnu.org/licenses/gpl-2.0.html "GPL v2")
 
 ### REQUIREMENTS
 
-Plugin compatible with i-MSCP versions >= 1.1.0
+Plugin compatible with i-MSCP versions >= 1.1.18
 
 ### INSTALLATION
 
@@ -127,7 +127,15 @@ Plugin compatible with i-MSCP versions >= 1.1.0
 
 	- Adds a new mail account to an existing i-MSCP account
 
-**1.10.** action collectusagedata
+**1.10.** action check_mail
+
+	- Checks the existence of a mail account in an existing i-MSCP account
+
+**1.11.** action delete_mail
+
+	- Deletes a mail account from an existing i-MSCP account
+
+**1.12.** action collectusagedata
 
 	- Collects all usage data of an existing i-MSCP account
 
@@ -279,5 +287,6 @@ Plugin compatible with i-MSCP versions >= 1.1.0
  * Sascha Bay <info@space2place.de> (Author)
  * Peter Ziergöbel <info@fisa4.de> (Contributor)
  * Ninos Ego <me@ninosego.de> (Contributor)
+ * Thom Heemstra <thom@heemstra.us> (Contributor)
 
 **Thank you for using this plugin.**

@@ -35,8 +35,8 @@ return array(
 		'Ninos Ego'
 	),
 	'email' => 'team@i-mscp.net',
-	'version' => '0.0.5',
-	'date' => '2014-12-07',
+	'version' => '0.0.6',
+	'date' => '2014-12-21',
 	'name' => 'RemoteBridge',
 	'desc' => 'Plugin providing an API which allows to manage i-MSCP accounts.',
 	'url' => 'http://wiki.i-mscp.net/doku.php?id=plugins:remotebridge'

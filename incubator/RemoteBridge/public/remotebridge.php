@@ -169,7 +169,7 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 
 			break;
 		case 'add_subdomain':
-			addSubDomain($resellerId, $postData)
+			addSubDomain($resellerId, $postData);
 
 			break;
 		case 'check_subdomain':

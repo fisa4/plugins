@@ -32,6 +32,10 @@ include_once('remotebridge.core.php');
 include_once('remotebridge.user.php');
 include_once('remotebridge.alias.php');
 include_once('remotebridge.mail.php');
+include_once('remotebridge.database.php');
+include_once('remotebridge.dns.php');
+include_once('remotebridge.domain.php');
+include_once('remotebridge.ftp.php');
 
 $filter = iMSCP_Registry::set(
 	'bufferFilter',
@@ -154,6 +158,22 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 			break;
 		case 'add_mail':
 			addMailAccount($resellerId, $postData);
+
+			break;
+		case 'check_mail':
+			checkMail($postData);
+
+			break;
+		case 'delete_mail':
+			deleteMail($resellerId, $postData);
+
+			break;
+		case 'add_subdomain':
+			addSubDomain($resellerId, $postData)
+
+			break;
+		case 'check_subdomain':
+
 
 			break;
 		case 'collectusagedata':

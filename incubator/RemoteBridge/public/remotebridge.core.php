@@ -118,7 +118,7 @@ function checkiMSCP_Version()
 	/** @var iMSCP_Config_Handler_File $cfg */
 	$cfg = iMSCP_Registry::get('config');
 
-	if (version_compare($cfg->Version, '1.1.0', '<')) {
+	if (version_compare($cfg->Version, '1.1.18', '<')) {
 		exit(
 			createJsonMessage(
 				array(

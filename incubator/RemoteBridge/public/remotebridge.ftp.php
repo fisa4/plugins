@@ -35,7 +35,7 @@
  * @param array $postData POST data
  * @return void
  */
-function addDb($resellerId, $postData){
+function addFtp($resellerId, $postData){
     // TODO: Add code to create new FTP account
 }
 

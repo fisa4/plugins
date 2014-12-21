@@ -35,9 +35,115 @@
  * @param array $postData POST data
  * @return void
  */
-function addSubDomain($resellerId, $postData){
-    // TODO: Add code to create new subdomain
+function addSubDomain($resellerId, $postData)
+{
+    $db = iMSCP_Registry::get('db');
+    $cfg = iMSCP_Registry::get('config');
+    $auth = iMSCP_Authentication::getInstance();
+
+    if (empty($postData['domain']) || empty($postData['subdomain'])) {
+        logoutReseller();
+        exit(
+        createJsonMessage(
+            array(
+                'level' => 'Error',
+                'message' => 'No domain or subdomain in post data available.'
+            )
+        )
+        );
+    } else {
+        $domainType = 'dmn';
+        $mountPoint = null;
+
+        $dmnquery = "SELECT `domain_id` FROM `domain` WHERE `domain_name` = ?";
+
+        $stmt = exec_query($dmnquery, $postData['domain']);
+        $domainId = $stmt->fields['domain_id'];
+
+        $checkquery = "SELECT `domain_id` FROM `subdomain` WHERE `subdomain_name` = ? AND `domain_id` = ?";
+        $stmt2 = exec_query($checkquery, array($postData['subdomain'], $domainId));
+
+        if ($stmt2->rowCount() == 0) {
+
+            $db->commit();
+
+            $subLabelAscii = clean_input(encode_idna(strtolower($postData['subdomain'])));
+            $forwardUrl = "no";
+
+
+            if (in_array($subLabelAscii, array('backups', 'cgi-bin', 'errors', 'logs', 'phptmp'))) {
+                $mountPoint = "/sub_$subLabelAscii";
+            } else {
+                $mountPoint = "/$subLabelAscii";
+            }
+
+
+            iMSCP_Events_Manager::getInstance()->dispatch(
+                iMSCP_Events::onBeforeAddSubdomain,
+                array(
+                    'subdomainName' => $postData['subdomain'],
+                    'subdomainType' => $domainType,
+                    'parentDomainId' => $domainId,
+                    'mountPoint' => $mountPoint,
+                    'forwardUrl' => $forwardUrl,
+                    'customerId' => $domainId
+                )
+            );
+
+
+            $query = "
+				INSERT INTO `subdomain` (
+					`domain_id`, `subdomain_name`, `subdomain_mount`, `subdomain_url_forward`, `subdomain_status`
+				) VALUES (
+					?, ?, ?, ?, ?
+				)
+			";
+
+            exec_query($query, array($domainId, $subLabelAscii, $mountPoint, $forwardUrl, 'toadd'));
+
+            update_reseller_c_props($resellerId);
+            $db->commit();
+
+
+            iMSCP_Events_Manager::getInstance()->dispatch(
+                iMSCP_Events::onAfterAddSubdomain,
+                array(
+                    'subdomainName' => $postData['subdomain'],
+                    'subdomainType' => $domainType,
+                    'parentDomainId' => $domainId,
+                    'mountPoint' => $mountPoint,
+                    'forwardUrl' => $forwardUrl,
+                    'customerId' => $domainId,
+                    'subdomainId' => $db->insertId()
+                )
+            );
+
+            send_request();
+            logoutReseller();
+            exit(
+            createJsonMessage(
+                array(
+                    'state' => 1,
+                    'level' => 'Success',
+                    'message' => sprintf('Subdomain added.', $postData['subdomain'])
+                )
+            )
+            );
+        } else {
+            logoutReseller();
+            exit(
+            createJsonMessage(
+                array(
+                    'state' => 2,
+                    'level' => 'Error',
+                    'message' => sprintf('Subdomain %s.%s is in use.', $postData['subdomain'], $postData['domain'])
+                )
+            )
+            );
+        }
+    }
 }
+
 
 /**
  * Edit subdomain

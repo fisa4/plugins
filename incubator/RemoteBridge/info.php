@@ -32,7 +32,9 @@ return array(
 	'author' => array(
 		'Sascha Bay',
 		'Peter Ziergöbel',
-		'Ninos Ego'
+		'Ninos Ego',
+		'Thom Heemstra',
+		'Christian Wolf'
 	),
 	'email' => 'team@i-mscp.net',
 	'version' => '0.0.6',

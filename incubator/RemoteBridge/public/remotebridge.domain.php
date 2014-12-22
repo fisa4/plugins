@@ -51,45 +51,62 @@ function addSubDomain($resellerId, $postData)
             )
         )
         );
-    } else {
-        $domainType = 'dmn';
-        $mountPoint = null;
+    }
 
-        $dmnquery = "SELECT `domain_id` FROM `domain` WHERE `domain_name` = ?";
+    $domainType = null;
+    $mountPoint = null;
+    $domain = encode_idna(strtolower($postData['domain']));
+    $sub = clean_input($postData['subdomain']);
+    $subdomain = $sub . '.' . $domain;
 
-        $stmt = exec_query($dmnquery, $postData['domain']);
-        $domainId = $stmt->fields['domain_id'];
+    $dmnQuery = "SELECT `domain_id` FROM `domain` WHERE `domain_name` = ?";
 
-        $checkquery = "SELECT `domain_id` FROM `subdomain` WHERE `subdomain_name` = ? AND `domain_id` = ?";
-        $stmt2 = exec_query($checkquery, array($postData['subdomain'], $domainId));
+    $stmt = exec_query($dmnQuery, $domain);
+    $domainId = $stmt->fields['domain_id'];
 
-        if ($stmt2->rowCount() == 0) {
+    $checkQuery = "SELECT `domain_id` FROM `subdomain` WHERE `subdomain_name` = ? AND `domain_id` = ?";
+    $stmt = exec_query($checkQuery, array($sub, $domainId));
 
-            $db->commit();
-
-            $subLabelAscii = clean_input(encode_idna(strtolower($postData['subdomain'])));
-            $forwardUrl = "no";
-
-
-            if (in_array($subLabelAscii, array('backups', 'cgi-bin', 'errors', 'logs', 'phptmp'))) {
-                $mountPoint = "/sub_$subLabelAscii";
-            } else {
-                $mountPoint = "/$subLabelAscii";
-            }
-
-
-            iMSCP_Events_Manager::getInstance()->dispatch(
-                iMSCP_Events::onBeforeAddSubdomain,
-                array(
-                    'subdomainName' => $postData['subdomain'],
-                    'subdomainType' => $domainType,
-                    'parentDomainId' => $domainId,
-                    'mountPoint' => $mountPoint,
-                    'forwardUrl' => $forwardUrl,
-                    'customerId' => $domainId
+    if ($stmt->rowCount() != 0){
+        logoutReseller();
+        exit(
+        createJsonMessage(
+            array(
+                'level' => 'Error',
+                'message' => sprintf(
+                    'Error while creating new subdomain: %s Subdomain already exists.',$subdomain
                 )
-            );
+            )
+        )
+        );
+    } else {
+        $db->commit();
 
+        $subLabelAscii = clean_input(encode_idna(strtolower($postData['subdomain'])));
+        $forwardUrl = "no";
+
+
+        if (in_array($subLabelAscii, array('backups', 'cgi-bin', 'errors', 'logs', 'phptmp'))) {
+            $mountPoint = "/sub_$subLabelAscii";
+        } else {
+            $mountPoint = "/$subLabelAscii";
+        }
+
+
+        iMSCP_Events_Manager::getInstance()->dispatch(
+            iMSCP_Events::onBeforeAddSubdomain,
+            array(
+                'subdomainName' => $sub,
+                'subdomainType' => $domainType,
+                'parentDomainId' => $domainId,
+                'mountPoint' => $mountPoint,
+                'forwardUrl' => $forwardUrl,
+                'customerId' => $domainId
+            )
+        );
+
+        try {
+            $db->beginTransaction();
 
             $query = "
 				INSERT INTO `subdomain` (
@@ -99,7 +116,7 @@ function addSubDomain($resellerId, $postData)
 				)
 			";
 
-            exec_query($query, array($domainId, $subLabelAscii, $mountPoint, $forwardUrl, 'toadd'));
+            exec_query($query, array($domainId, $subLabelAscii, $mountPoint, $forwardUrl, $cfg->ITEM_TOADD_STATUS));
 
             update_reseller_c_props($resellerId);
             $db->commit();
@@ -108,7 +125,7 @@ function addSubDomain($resellerId, $postData)
             iMSCP_Events_Manager::getInstance()->dispatch(
                 iMSCP_Events::onAfterAddSubdomain,
                 array(
-                    'subdomainName' => $postData['subdomain'],
+                    'subdomainName' => $sub,
                     'subdomainType' => $domainType,
                     'parentDomainId' => $domainId,
                     'mountPoint' => $mountPoint,
@@ -119,31 +136,38 @@ function addSubDomain($resellerId, $postData)
             );
 
             send_request();
-            logoutReseller();
-            exit(
-            createJsonMessage(
-                array(
-                    'state' => 1,
-                    'level' => 'Success',
-                    'message' => sprintf('Subdomain added.', $postData['subdomain'])
-                )
-            )
+            write_log(
+                sprintf(
+                    "%s add Subdomain: %s for domain: %s (%s) via remote bridge.",
+                    decode_idna($auth->getIdentity()->admin_name), $sub, $domain, $subdomain
+                ),
+                E_USER_NOTICE
             );
-        } else {
+        } catch (iMSCP_Exception_Database $e) {
+            $db->rollBack();
             logoutReseller();
             exit(
             createJsonMessage(
                 array(
-                    'state' => 2,
                     'level' => 'Error',
-                    'message' => sprintf('Subdomain %s.%s is in use.', $postData['subdomain'], $postData['domain'])
+                    'message' => sprintf(
+                        'Error while creating New Subdomain: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
+                    )
                 )
             )
             );
         }
+
+        echo(
+        createJsonMessage(
+            array(
+                'level' => 'Success',
+                'message' => sprintf('New subdomain %s added successful.', $subdomain)
+            )
+        )
+        );
     }
 }
-
 
 /**
  * Edit subdomain
@@ -152,7 +176,8 @@ function addSubDomain($resellerId, $postData)
  * @param array $postData POST data
  * @return void
  */
-function editSubDomain($resellerId, $postData){
+function editSubDomain($resellerId, $postData)
+{
     // TODO: Add code to edit subdomain
 }
 
@@ -163,6 +188,19 @@ function editSubDomain($resellerId, $postData){
  * @param array $postData POST data
  * @return void
  */
-function deleteSubDomain($resellerId, $postData){
+function deleteSubDomain($resellerId, $postData)
+{
+    // TODO: Add code to delete subdomain
+}
+
+/**
+ * Check subdomain
+ *
+ * @param int $resellerId Reseller unique identifier
+ * @param array $postData POST data
+ * @return void
+ */
+function checkSubDomain($resellerId, $postData)
+{
     // TODO: Add code to delete subdomain
 }

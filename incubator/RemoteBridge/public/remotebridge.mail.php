@@ -499,3 +499,15 @@ function deleteMail($resellerId, $postData)
         );
     }
 }
+
+/**
+ * Edit mail
+ *
+ * @param int $resellerId Reseller unique identifier
+ * @param array $postData POST data
+ * @return void
+ */
+function editMail($resellerId, $postData)
+{
+    // TODO: Add code to edit Email address
+}

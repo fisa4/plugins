@@ -77,12 +77,12 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 			if (empty($postData['domain'])) {
 				logoutReseller();
 				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => 'No domain in post data available.'
-						)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => 'No domain in post data available.'
 					)
+				)
 				);
 			}
 
@@ -94,12 +94,12 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 			if (empty($postData['domain'])) {
 				logoutReseller();
 				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => 'No domain in post data available.'
-						)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => 'No domain in post data available.'
 					)
+				)
 				);
 			}
 
@@ -111,12 +111,12 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 			if (empty($postData['domain'])) {
 				logoutReseller();
 				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => 'No domain in post data available.'
-						)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => 'No domain in post data available.'
 					)
+				)
 				);
 			}
 
@@ -124,18 +124,18 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 
 			break;
 		case 'update_user':
-			 $resellerHostingPlan = (isset($postData['hosting_plan']))
-					? checkResellerHostingPlan($resellerId, $postData['hosting_plan']) : array();
+			$resellerHostingPlan = (isset($postData['hosting_plan']))
+				? checkResellerHostingPlan($resellerId, $postData['hosting_plan']) : array();
 
 			$resellerIpaddress = checkResellerAssignedIP($resellerId);
 
 			if (count($resellerHostingPlan) == 0) {
-					checkLimitsPostData($postData, $resellerId);
+				checkLimitsPostData($postData, $resellerId);
 			}
 
 			updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $postData);
 
-			break; 
+			break;
 		case 'add_alias':
 			$resellerIpaddress = checkResellerAssignedIP($resellerId);
 			addAliasDomain($resellerId, $resellerIpaddress, $postData);
@@ -144,12 +144,12 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 			if (empty($postData['domain'])) {
 				logoutReseller();
 				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => 'No reseller name in post data available.'
-						)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => 'No reseller name in post data available.'
 					)
+				)
 				);
 			}
 
@@ -177,29 +177,17 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 
 			break;
 		case 'collectusagedata':
-			if (empty($postData['domain'])) {
-				logoutReseller();
-				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => 'No domain in post data available.'
-						)
-					)
-				);
-			}
-
-			collectUsageData($resellerId, $postData['domain']);
+			collectUsageData($resellerId, $postData);
 
 			break;
 		default:
 			exit(
-				createJsonMessage(
-					array(
-						'level' => 'Error',
-						'message' => sprintf('This action: %s is not implemented.', $action)
-					)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf('This action: %s is not implemented.', $action)
 				)
+			)
 			);
 	}
 

@@ -25,7 +25,7 @@
  * @author      Peter Ziergöbel <info@fisa4.de>
  * @author      Ninos Ego <me@ninosego.de>
  * @author      Thom Heemstra <thom@heemstra.us>
- * 
+ *
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
@@ -48,12 +48,12 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	if (empty($postData['domain']) || empty($postData['admin_pass']) || empty($postData['email'])) {
 		logoutReseller();
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => 'No domain, user password, or user email address in post data available.'
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => 'No domain, user password, or user email address in post data available.'
 			)
+		)
 		);
 	}
 
@@ -65,24 +65,24 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	if (!isValidDomainName($dmnUsername)) {
 		logoutReseller();
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('The domain %s is not valid.', $domain)
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('The domain %s is not valid.', $domain)
 			)
+		)
 		);
 	}
 
 	if (imscp_domain_exists($dmnUsername, $resellerId)) {
 		logoutReseller();
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('Domain %s already exist on this server.', $domain)
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('Domain %s already exist on this server.', $domain)
 			)
+		)
 		);
 	}
 
@@ -261,8 +261,8 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 				'domainId' => $dmnId
 			)
 		);
-		
-                send_add_user_auto_msg($resellerId, $dmnUsername, $pure_user_pass, $fname, $lname, "Customer"); // Needs i10n/i18n
+
+		send_add_user_auto_msg($resellerId, $dmnUsername, $pure_user_pass, $fname, $lname, "Customer"); // Needs i10n/i18n
 
 		send_request();
 
@@ -285,14 +285,14 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 		$db->rollBack();
 		logoutReseller();
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf(
-						'Error while creating user: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
-					)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf(
+					'Error while creating user: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
 				)
 			)
+		)
 		);
 	}
 
@@ -301,12 +301,12 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	}
 
 	echo(
-		createJsonMessage(
-			array(
-				'level' => 'Success',
-				'message' => sprintf('User %s added successfull.', $domain)
-			)
+	createJsonMessage(
+		array(
+			'level' => 'Success',
+			'message' => sprintf('User %s added successfull.', $domain)
 		)
+	)
 	);
 }
 
@@ -344,21 +344,21 @@ function deleteUser($resellerId, $domain)
 			if (!deleteCustomer($customerId, true)) {
 				logoutReseller();
 				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => sprintf('Customer account %s not found.', $domain)
-						)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf('Customer account %s not found.', $domain)
 					)
+				)
 				);
 			}
 			echo(
-				createJsonMessage(
-					array(
-						'level' => 'Success',
-						'message' => sprintf('Customer account: %s successfully scheduled for deletion.', $domain)
-					)
+			createJsonMessage(
+				array(
+					'level' => 'Success',
+					'message' => sprintf('Customer account: %s successfully scheduled for deletion.', $domain)
 				)
+			)
 			);
 			write_log(
 				sprintf('%s scheduled deletion of the customer account: %s',
@@ -379,24 +379,24 @@ function deleteUser($resellerId, $domain)
 
 			logoutReseller();
 			exit(
-				createJsonMessage(
-					array(
-						'level' => 'Error',
-						'message' => sprintf(
-							'System was unable to schedule deletion of the customer account: %s.', $domain
-						)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf(
+						'System was unable to schedule deletion of the customer account: %s.', $domain
 					)
 				)
+			)
 			);
 		}
 	} else {
 		echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('Unknown domain %s.', $domain)
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('Unknown domain %s.', $domain)
 			)
+		)
 		);
 	}
 }
@@ -443,35 +443,35 @@ function disableUser($resellerId, $domain)
 				E_USER_NOTICE
 			);
 			echo(
-				createJsonMessage(
-					array(
-						'level' => 'Success',
-						'message' => sprintf('Domain %s succesfully disabled.', $domain)
-					)
+			createJsonMessage(
+				array(
+					'level' => 'Success',
+					'message' => sprintf('Domain %s succesfully disabled.', $domain)
 				)
+			)
 			);
 		} else {
 			echo(
-				createJsonMessage(
-					array(
-						'level' => 'Error',
-						'message' => sprintf(
-							'Cannot disable domain %s. Current domain status is: %s.',
-							$domain,
-							$stmt->fields['domain_status']
-						)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf(
+						'Cannot disable domain %s. Current domain status is: %s.',
+						$domain,
+						$stmt->fields['domain_status']
 					)
 				)
+			)
 			);
 		}
 	} else {
 		echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('Unknown domain %s.', $domain)
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('Unknown domain %s.', $domain)
 			)
+		)
 		);
 	}
 }
@@ -519,34 +519,34 @@ function enableUser($resellerId, $domain)
 			);
 
 			echo(
-				createJsonMessage(
-					array(
-						'level' => 'Success',
-						'message' => sprintf('Domain %s succesfully activated.', $domain)
-					)
+			createJsonMessage(
+				array(
+					'level' => 'Success',
+					'message' => sprintf('Domain %s succesfully activated.', $domain)
 				)
+			)
 			);
 		} else {
 			echo(
-				createJsonMessage(
-					array(
-						'level' => 'Error',
-						'message' => sprintf(
-							'Cannot activate domain %s. Current domain status is: %s.',
-							$domain, $stmt->fields['domain_status']
-						)
+			createJsonMessage(
+				array(
+					'level' => 'Error',
+					'message' => sprintf(
+						'Cannot activate domain %s. Current domain status is: %s.',
+						$domain, $stmt->fields['domain_status']
 					)
 				)
+			)
 			);
 		}
 	} else {
 		echo(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('Unknown domain %s.', $domain)
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('Unknown domain %s.', $domain)
 			)
+		)
 		);
 	}
 }
@@ -570,7 +570,6 @@ function collectUsageData($resellerId, $domain)
 		WHERE
 			created_by = ?
 	';
-
 	if ($domain == 'all') {
 		$stmt = exec_query($query, $resellerId);
 	} else {
@@ -578,30 +577,26 @@ function collectUsageData($resellerId, $domain)
 		$dmnUsername = encode_idna($domain);
 		$stmt = exec_query($query, array($resellerId, $dmnUsername));
 	}
-
 	if (!$stmt->rowCount()) {
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => ($domain === 'all')
-						? sprintf('No usage data available.') : sprintf('Unknown domain %s.', $domain)
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => ($domain === 'all')
+					? sprintf('No usage data available.') : sprintf('Unknown domain %s.', $domain)
 			)
+		)
 		);
 	} else {
 		$usageData = array();
-
 		foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $domainId) {
 			list(
 				$domainName, $domainId, , , , , $trafficUsageBytes, $diskspaceUsageBytes
-				) = generate_user_traffic($domainId);
-
+				) = shared_getCustomerStats($domainId);
 			list(
 				$usub_current, $usub_max, $uals_current, $uals_max, $umail_current, $umail_max, $uftp_current, $uftp_max,
 				$usql_db_current, $usql_db_max, $usql_user_current, $usql_user_max, $trafficLimit, $diskspaceLimit
-				) = generate_user_props($domainId);
-
+				) = shared_getCustomerProps($domainId);
 			if ($domainName != 'n/a') {
 				$usageData[$domainName] = array(
 					'domain' => $domainName,
@@ -624,24 +619,23 @@ function collectUsageData($resellerId, $domain)
 				);
 			} else {
 				exit(
-					createJsonMessage(
-						array(
-							'level' => 'Error',
-							'message' => sprintf('Error while collecting usage statistics for domain %s.', $domain)
-						)
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => sprintf('Error while collecting usage statistics for domain %s.', $domain)
 					)
+				)
 				);
 			}
 		}
-
 		echo(
-			createJsonMessage(
-				array(
-					'level' => 'Success',
-					'message' => sprintf('Usage statistics for domain %s successfully generated.', $domain),
-					'data' => $usageData
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Success',
+				'message' => sprintf('Usage statistics for domain %s successfully generated.', $domain),
+				'data' => $usageData
 			)
+		)
 		);
 	}
 }
@@ -650,7 +644,7 @@ function collectUsageData($resellerId, $domain)
  * Create user list
  *
  * @param $resellerId
- * @return user list 
+ * @return user list
  */
 
 function getUserList($resellerId)
@@ -665,40 +659,40 @@ function getUserList($resellerId)
 	';
 
 	$stmt = exec_query($query, $resellerId);
-	
+
 	if ( !$stmt->rowCount() ) {
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('No admin data available.')
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('No admin data available.')
 			)
+		)
 		);
 	}
 
 	$result = $stmt->fetchAll();
 
 	echo(
-		createJsonMessage(
-			array(
-				'level' => 'Success',
-				'message' => sprintf('User list successfully generated.'),
-				'data' => $result
-			)
+	createJsonMessage(
+		array(
+			'level' => 'Success',
+			'message' => sprintf('User list successfully generated.'),
+			'data' => $result
 		)
+	)
 	);
 }
 
 /**
-* Update user
-*
-* @param int $resellerId Reseller unique identifier
-* @param string $resellerHostingPlan HostingPlan name
-* @param string $resellerIpaddress IP address
-* @param array $postData POST data
-* @return void
-*/
+ * Update user
+ *
+ * @param int $resellerId Reseller unique identifier
+ * @param string $resellerHostingPlan HostingPlan name
+ * @param string $resellerIpaddress IP address
+ * @param array $postData POST data
+ * @return void
+ */
 function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $postData)
 {
 	$db = iMSCP_Registry::get('db');
@@ -708,12 +702,12 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 	if (empty($postData['domain'])) {
 		logoutReseller();
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => 'No domain in post data available.'
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => 'No domain in post data available.'
 			)
+		)
 		);
 	}
 	if(! empty($postData['admin_pass'])){
@@ -728,12 +722,12 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 	if (! imscp_domain_exists($dmnUsername, $resellerId)) {
 		logoutReseller();
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf('Domain %s not exist on this server.', $domain)
-				)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf('Domain %s not exist on this server.', $domain)
 			)
+		)
 		);
 	}
 
@@ -761,50 +755,50 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 			)
 		);
 
-	$dmnExpire = 0;
-	$domain_mailacc_limit = (count($resellerHostingPlan) == 0)
-		? $postData['hp_mail'] : $resellerHostingPlan['hp_mail'];
-	$domain_mail_quota = $mailQuota;
-	$domain_ftpacc_limit = (count($resellerHostingPlan) == 0)
-		? $postData['hp_ftp'] : $resellerHostingPlan['hp_ftp'];
-	$domain_traffic_limit = (count($resellerHostingPlan) == 0)
-		? $postData['hp_traff'] : $resellerHostingPlan['hp_traff'];
-	$domain_sqld_limit = (count($resellerHostingPlan) == 0)
-		? $postData['hp_sql_db'] : $resellerHostingPlan['hp_sql_db'];
-	$domain_sqlu_limit = (count($resellerHostingPlan) == 0)
-		? $postData['hp_sql_user'] : $resellerHostingPlan['hp_sql_user'];
-	$domain_subd_limit = (count($resellerHostingPlan) == 0) 
-		? $postData['hp_sub'] : $resellerHostingPlan['hp_sub'];
-	$domain_alias_limit = (count($resellerHostingPlan) == 0) 
-		? $postData['hp_als'] : $resellerHostingPlan['hp_als'];
-	$domain_ip_id = $resellerIpaddress;
-	$domain_disk_limit = (count($resellerHostingPlan) == 0)
-		? $postData['hp_disk'] : $resellerHostingPlan['hp_disk'];
-	$domain_php = (count($resellerHostingPlan) == 0)
-		? $postData['hp_php'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_php']);
-	$domain_cgi = (count($resellerHostingPlan) == 0)
-		? $postData['hp_cgi'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_cgi']);
-	$allowbackup = (count($resellerHostingPlan) == 0)
-		? $postData['hp_backup'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_backup']);
-	$domain_dns = (count($resellerHostingPlan) == 0)
-		? $postData['hp_dns'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_dns']);
-	$domain_software_allowed = (count($resellerHostingPlan) == 0)
-		? $postData['hp_allowsoftware'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_allowsoftware']);
-	$phpini_perm_system = (count($resellerHostingPlan) == 0)
-		? $postData['phpini_system'] : $resellerHostingPlan['phpini_system'];
-	$phpini_perm_allow_url_fopen = (count($resellerHostingPlan) == 0)
-		? $postData['phpini_perm_allow_url_fopen'] : $resellerHostingPlan['phpini_perm_allow_url_fopen'];
-	$phpini_perm_display_errors = (count($resellerHostingPlan) == 0)
-		? $postData['phpini_perm_display_errors'] : $resellerHostingPlan['phpini_perm_display_errors'];
-	$phpini_perm_disable_functions = (count($resellerHostingPlan) == 0)
-		? $postData['phpini_perm_disable_functions'] : $resellerHostingPlan['phpini_perm_disable_functions'];
-	$domain_external_mail = (count($resellerHostingPlan) == 0)
-		? $postData['external_mail'] : preg_replace("/\_/", '', $resellerHostingPlan['external_mail']);
-	$webFolderProtection = (count($resellerHostingPlan) == 0)
-		? $postData['web_folder_protection']
-		: preg_replace("/\_/", '', $resellerHostingPlan['web_folder_protection']);
+		$dmnExpire = 0;
+		$domain_mailacc_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_mail'] : $resellerHostingPlan['hp_mail'];
+		$domain_mail_quota = $mailQuota;
+		$domain_ftpacc_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_ftp'] : $resellerHostingPlan['hp_ftp'];
+		$domain_traffic_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_traff'] : $resellerHostingPlan['hp_traff'];
+		$domain_sqld_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_sql_db'] : $resellerHostingPlan['hp_sql_db'];
+		$domain_sqlu_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_sql_user'] : $resellerHostingPlan['hp_sql_user'];
+		$domain_subd_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_sub'] : $resellerHostingPlan['hp_sub'];
+		$domain_alias_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_als'] : $resellerHostingPlan['hp_als'];
+		$domain_ip_id = $resellerIpaddress;
+		$domain_disk_limit = (count($resellerHostingPlan) == 0)
+			? $postData['hp_disk'] : $resellerHostingPlan['hp_disk'];
+		$domain_php = (count($resellerHostingPlan) == 0)
+			? $postData['hp_php'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_php']);
+		$domain_cgi = (count($resellerHostingPlan) == 0)
+			? $postData['hp_cgi'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_cgi']);
+		$allowbackup = (count($resellerHostingPlan) == 0)
+			? $postData['hp_backup'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_backup']);
+		$domain_dns = (count($resellerHostingPlan) == 0)
+			? $postData['hp_dns'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_dns']);
+		$domain_software_allowed = (count($resellerHostingPlan) == 0)
+			? $postData['hp_allowsoftware'] : preg_replace("/\_/", '', $resellerHostingPlan['hp_allowsoftware']);
+		$phpini_perm_system = (count($resellerHostingPlan) == 0)
+			? $postData['phpini_system'] : $resellerHostingPlan['phpini_system'];
+		$phpini_perm_allow_url_fopen = (count($resellerHostingPlan) == 0)
+			? $postData['phpini_perm_allow_url_fopen'] : $resellerHostingPlan['phpini_perm_allow_url_fopen'];
+		$phpini_perm_display_errors = (count($resellerHostingPlan) == 0)
+			? $postData['phpini_perm_display_errors'] : $resellerHostingPlan['phpini_perm_display_errors'];
+		$phpini_perm_disable_functions = (count($resellerHostingPlan) == 0)
+			? $postData['phpini_perm_disable_functions'] : $resellerHostingPlan['phpini_perm_disable_functions'];
+		$domain_external_mail = (count($resellerHostingPlan) == 0)
+			? $postData['external_mail'] : preg_replace("/\_/", '', $resellerHostingPlan['external_mail']);
+		$webFolderProtection = (count($resellerHostingPlan) == 0)
+			? $postData['web_folder_protection']
+			: preg_replace("/\_/", '', $resellerHostingPlan['web_folder_protection']);
 
-	$query = "
+		$query = "
 		UPDATE
 			`domain`
 		SET
@@ -819,92 +813,92 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 		WHERE
 			`domain_id` = ?
 			";
-	exec_query(
-		$query,
-		array(
-			$dmnExpire, time(), $domain_mailacc_limit, 
-			$domain_ftpacc_limit, $domain_traffic_limit, $domain_sqld_limit, 
-			$domain_sqlu_limit, $cfg->ITEM_TOCHANGE_STATUS,	$domain_alias_limit, $domain_subd_limit, 
-			$domain_ip_id, $domain_disk_limit, $domain_php, $domain_cgi, $allowbackup, 
-			$domain_dns, $domain_software_allowed, $phpini_perm_system, 
-			$phpini_perm_allow_url_fopen, $phpini_perm_display_errors, 
-			$phpini_perm_disable_functions, $domain_external_mail,	$webFolderProtection, 
-			$domain_mail_quota, $domainId
-		)
-	);
+		exec_query(
+			$query,
+			array(
+				$dmnExpire, time(), $domain_mailacc_limit,
+				$domain_ftpacc_limit, $domain_traffic_limit, $domain_sqld_limit,
+				$domain_sqlu_limit, $cfg->ITEM_TOCHANGE_STATUS,	$domain_alias_limit, $domain_subd_limit,
+				$domain_ip_id, $domain_disk_limit, $domain_php, $domain_cgi, $allowbackup,
+				$domain_dns, $domain_software_allowed, $phpini_perm_system,
+				$phpini_perm_allow_url_fopen, $phpini_perm_display_errors,
+				$phpini_perm_disable_functions, $domain_external_mail,	$webFolderProtection,
+				$domain_mail_quota, $domainId
+			)
+		);
 
-	$dmnId = $db->insertId();
+		$dmnId = $db->insertId();
 
-	if ($phpini_perm_system == 'yes') {
-		$phpini = iMSCP_PHPini::getInstance();
-		$phpini->setData('phpiniSystem', 'yes');
-		$phpini->setData('phpiniPostMaxSize', (count($resellerHostingPlan) == 0)
-			? $postData['phpini_post_max_size'] : $resellerHostingPlan['phpini_post_max_size']);
-		$phpini->setData('phpiniUploadMaxFileSize', (count($resellerHostingPlan) == 0)
-			? $postData['phpini_upload_max_filesize'] : $resellerHostingPlan['phpini_upload_max_filesize']);
-		$phpini->setData('phpiniMaxExecutionTime', (count($resellerHostingPlan) == 0)
-			? $postData['phpini_max_execution_time'] : $resellerHostingPlan['phpini_max_execution_time']);
-		$phpini->setData('phpiniMaxInputTime', (count($resellerHostingPlan) == 0)
-			? $postData['phpini_max_input_time'] : $resellerHostingPlan['phpini_max_input_time']);
-		$phpini->setData('phpiniMemoryLimit', (count($resellerHostingPlan) == 0)
-			? $postData['phpini_memory_limit'] : $resellerHostingPlan['phpini_memory_limit']);
-		$phpini->saveCustomPHPiniIntoDb($dmnId);
-	}
+		if ($phpini_perm_system == 'yes') {
+			$phpini = iMSCP_PHPini::getInstance();
+			$phpini->setData('phpiniSystem', 'yes');
+			$phpini->setData('phpiniPostMaxSize', (count($resellerHostingPlan) == 0)
+				? $postData['phpini_post_max_size'] : $resellerHostingPlan['phpini_post_max_size']);
+			$phpini->setData('phpiniUploadMaxFileSize', (count($resellerHostingPlan) == 0)
+				? $postData['phpini_upload_max_filesize'] : $resellerHostingPlan['phpini_upload_max_filesize']);
+			$phpini->setData('phpiniMaxExecutionTime', (count($resellerHostingPlan) == 0)
+				? $postData['phpini_max_execution_time'] : $resellerHostingPlan['phpini_max_execution_time']);
+			$phpini->setData('phpiniMaxInputTime', (count($resellerHostingPlan) == 0)
+				? $postData['phpini_max_input_time'] : $resellerHostingPlan['phpini_max_input_time']);
+			$phpini->setData('phpiniMemoryLimit', (count($resellerHostingPlan) == 0)
+				? $postData['phpini_memory_limit'] : $resellerHostingPlan['phpini_memory_limit']);
+			$phpini->saveCustomPHPiniIntoDb($dmnId);
+		}
 
-	update_reseller_c_props($resellerId);
+		update_reseller_c_props($resellerId);
 
-	$db->commit();
+		$db->commit();
 
-	iMSCP_Events_Manager::getInstance()->dispatch(
-		iMSCP_Events::onAfterEditDomain,
-		array(
-			'domainName' => $dmnUsername,
-			'createdBy' => $resellerId,
-			'customerId' => $recordId,
-			'customerEmail' => $userEmail,
-			'domainId' => $dmnId
-		)
-	);
+		iMSCP_Events_Manager::getInstance()->dispatch(
+			iMSCP_Events::onAfterEditDomain,
+			array(
+				'domainName' => $dmnUsername,
+				'createdBy' => $resellerId,
+				'customerId' => $recordId,
+				'customerEmail' => $userEmail,
+				'domainId' => $dmnId
+			)
+		);
 
-	send_request();
+		send_request();
 
-	write_log(
-		sprintf(
-			"%s update user: " . $domain . " (for domain " . $domain . ") via remote bridge",
-			decode_idna($auth->getIdentity()->admin_name)
-		),
-		E_USER_NOTICE
-	);
-	write_log(
-		sprintf(
-			"%s update user: update domain: " . $domain . " via remote bridge",
-			decode_idna($auth->getIdentity()->admin_name)
-		),
-		E_USER_NOTICE
-	);
+		write_log(
+			sprintf(
+				"%s update user: " . $domain . " (for domain " . $domain . ") via remote bridge",
+				decode_idna($auth->getIdentity()->admin_name)
+			),
+			E_USER_NOTICE
+		);
+		write_log(
+			sprintf(
+				"%s update user: update domain: " . $domain . " via remote bridge",
+				decode_idna($auth->getIdentity()->admin_name)
+			),
+			E_USER_NOTICE
+		);
 
 	}
 	catch (iMSCP_Exception_Database $e) {
 		$db->rollBack();
 		logoutReseller();
 		exit(
-			createJsonMessage(
-				array(
-					'level' => 'Error',
-					'message' => sprintf(
-						'Error while updating user: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
-					)
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf(
+					'Error while updating user: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
 				)
 			)
+		)
 		);
 	}
 
 	echo(
-		createJsonMessage(
-			array(
-				'level' => 'Success',
-				'message' => sprintf('User %s update successful.', $domain)
-			)
+	createJsonMessage(
+		array(
+			'level' => 'Success',
+			'message' => sprintf('User %s update successful.', $domain)
 		)
+	)
 	);
 }

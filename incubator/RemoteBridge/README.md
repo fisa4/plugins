@@ -288,5 +288,6 @@ Plugin compatible with i-MSCP versions >= 1.1.18
  * Peter Ziergöbel <info@fisa4.de> (Contributor)
  * Ninos Ego <me@ninosego.de> (Contributor)
  * Thom Heemstra <thom@heemstra.us> (Contributor)
+ * Christian Wolf (Contributor)
 
 **Thank you for using this plugin.**

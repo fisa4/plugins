@@ -137,11 +137,12 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 				'customerEmail' => $userEmail
 			)
 		);
-
+		$mailQuotaResellerHP = (isset($resellerHostingPlan['mail_quota'])) ? $resellerHostingPlan['mail_quota'] * 1048576 : '0';
+		$mailQuotaPostData = (isset($postData['mail_quota'])) ? $postData['mail_quota'] * 1048576 : '0';
 		if (count($resellerHostingPlan) == 0) {
-			$mailQuota = ($postData['mail_quota'] != '0') ? $postData['mail_quota'] * 1048576 : '0';
+			$mailQuota = $mailQuotaPostData;
 		} else {
-			$mailQuota = ($resellerHostingPlan['mail_quota'] != '0') ? $resellerHostingPlan['mail_quota'] * 1048576 : '0';
+			$mailQuota = $mailQuotaResellerHP;
 		}
 
 		$dmnExpire = 0;
@@ -211,7 +212,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 			)
 		);
 
-		$dmnId = $db->insertId();
+		$domainId = $db->insertId();
 
 		if ($phpini_perm_system == 'yes') {
 			$phpini = iMSCP_PHPini::getInstance();
@@ -228,20 +229,20 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 			$phpini->setData('phpiniMemoryLimit', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_memory_limit'] : $resellerHostingPlan['phpini_memory_limit']);
 
-			$phpini->saveCustomPHPiniIntoDb($dmnId);
+			$phpini->saveCustomPHPiniIntoDb($domainId);
 		}
 
 		$query = "INSERT INTO `htaccess_users` (`dmn_id`, `uname`, `upass`, `status`) VALUES (?, ?, ?, ?)";
-		exec_query($query, array($dmnId, $dmnUsername, cryptPasswordWithSalt($pure_user_pass), $cfg->ITEM_TOADD_STATUS));
+		exec_query($query, array($domainId, $dmnUsername, cryptPasswordWithSalt($pure_user_pass), $cfg->ITEM_TOADD_STATUS));
 
 		$user_id = $db->insertId();
 
 		$query = 'INSERT INTO `htaccess_groups` (`dmn_id`, `ugroup`, `members`, `status`) VALUES (?, ?, ?, ?)';
-		exec_query($query, array($dmnId, $cfg->WEBSTATS_GROUP_AUTH, $user_id, $cfg->ITEM_TOADD_STATUS));
+		exec_query($query, array($domainId, $cfg->WEBSTATS_GROUP_AUTH, $user_id, $cfg->ITEM_TOADD_STATUS));
 
 		// Create default addresses if needed
 		if ($cfg->CREATE_DEFAULT_EMAIL_ADDRESSES) {
-			client_mail_add_default_accounts($dmnId, $userEmail, $dmnUsername);
+			client_mail_add_default_accounts($domainId, $userEmail, $dmnUsername);
 		}
 
 		$query = "INSERT INTO `user_gui_props` (`user_id`, `lang`, `layout`) VALUES (?, ?, ?)";
@@ -258,11 +259,11 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 				'createdBy' => $resellerId,
 				'customerId' => $recordId,
 				'customerEmail' => $userEmail,
-				'domainId' => $dmnId
+				'domainId' => $domainId
 			)
 		);
 
-		send_add_user_auto_msg($resellerId, $dmnUsername, $pure_user_pass, $fname, $lname, "Customer"); // Needs i10n/i18n
+		send_add_user_auto_msg($resellerId, $dmnUsername, $pure_user_pass, $userEmail, $fname, $lname, 'Customer'); // Needs i10n/i18n
 
 		send_request();
 
@@ -297,7 +298,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	}
 
 	if (isset($postData['alias_domains']) && count($postData['alias_domains']) > 0) {
-		createAliasDomain($resellerId, $dmnId, $domain_ip_id, $postData);
+		createAliasDomain($resellerId, $domainId, $domain_ip_id, $postData);
 	}
 
 	echo(
@@ -699,7 +700,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 	$cfg = iMSCP_Registry::get('config');
 	$auth = iMSCP_Authentication::getInstance();
 
-	if (empty($postData['domain'])) {
+	if (empty($postData['domain']) || empty($postData['email'])) {
 		logoutReseller();
 		exit(
 		createJsonMessage(
@@ -730,18 +731,9 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 		)
 		);
 	}
-
-	$query = '
-		SELECT
-			domain_id
-		FROM
-			domain
-		WHERE
-			domain_name = ?
-	';
-	$stmt = exec_query($query, $domain);
-	$domainId = $stmt->fields['domain_id'];
-
+	$userEmail = (isset($postData['email'])) ? clean_input($postData['email']) :  '';
+	$domainId = getDomainIdByDomain($domain);
+	$customerId = getDomainAdminIdByDomainId($domainId);
 	try {
 		$db->beginTransaction();
 
@@ -750,10 +742,19 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 			array(
 				'domainName' => $dmnUsername,
 				'createdBy' => $resellerId,
-				'customerId' => $recordId,
+				'customerId' => $customerId,
 				'customerEmail' => $userEmail
 			)
 		);
+
+		$mailQuotaResellerHP = (isset($resellerHostingPlan['mail_quota'])) ? $resellerHostingPlan['mail_quota'] * 1048576 : '0';
+		$mailQuotaPostData = (isset($postData['mail_quota'])) ? $postData['mail_quota'] * 1048576 : '0';
+		if (count($resellerHostingPlan) == 0) {
+			$mailQuota = $mailQuotaPostData;
+		} else {
+			$mailQuota = $mailQuotaResellerHP;
+		}
+
 
 		$dmnExpire = 0;
 		$domain_mailacc_limit = (count($resellerHostingPlan) == 0)
@@ -827,7 +828,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 			)
 		);
 
-		$dmnId = $db->insertId();
+		$domainId = $db->insertId();
 
 		if ($phpini_perm_system == 'yes') {
 			$phpini = iMSCP_PHPini::getInstance();
@@ -842,7 +843,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 				? $postData['phpini_max_input_time'] : $resellerHostingPlan['phpini_max_input_time']);
 			$phpini->setData('phpiniMemoryLimit', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_memory_limit'] : $resellerHostingPlan['phpini_memory_limit']);
-			$phpini->saveCustomPHPiniIntoDb($dmnId);
+			$phpini->saveCustomPHPiniIntoDb($domainId);
 		}
 
 		update_reseller_c_props($resellerId);
@@ -854,9 +855,9 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 			array(
 				'domainName' => $dmnUsername,
 				'createdBy' => $resellerId,
-				'customerId' => $recordId,
+				'customerId' => $customerId,
 				'customerEmail' => $userEmail,
-				'domainId' => $dmnId
+				'domainId' => $domainId
 			)
 		);
 

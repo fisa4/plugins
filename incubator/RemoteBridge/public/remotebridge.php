@@ -177,7 +177,49 @@ if (isset($_POST['key']) && isset($_POST['data'])) {
 
 			break;
 		case 'collectusagedata':
-			collectUsageData($resellerId, $postData);
+			if (empty($postData['domain'])) {
+				logoutReseller();
+				exit(
+				createJsonMessage(
+					array(
+						'level' => 'Error',
+						'message' => 'No domain in post data available.'
+					)
+				)
+				);
+			}
+			collectUsageData($resellerId, $postData['domain']);
+			break;
+		case 'add_ftp':
+			addFtpAccount($resellerId, $postData);
+
+			break;
+		case 'delete_ftp':
+			deleteFtp($resellerId, $postData);
+
+			break;
+		case 'add_sql_db':
+			addSqlDb($resellerId, $postData);
+
+			break;
+		case 'delete_sql_db':
+			deleteSqlDb($resellerId, $postData);
+
+			break;
+		case 'get_sql_db':
+			getSqlDb($postData);
+
+			break;
+		case 'add_sql_user':
+			addSqlUser($resellerId, $postData);
+
+			break;
+		case 'edit_sql_user_pass':
+			editSqlUserPassword($resellerId, $postData);
+
+			break;
+		case 'delete_sql_user':
+			deleteSqlUser($resellerId, $postData);
 
 			break;
 		default:

@@ -679,3 +679,92 @@ function createJsonMessage($inputData)
 {
 	return json_encode($inputData);
 }
+
+/**
+ * Get domain id by domain name
+ *
+ * @param $domain
+ * @return string
+ */
+function getDomainIdByDomain($domain)
+{
+	$query = '
+		SELECT
+			domain_id
+		FROM
+			domain
+		WHERE
+			domain_name = ?
+	';
+	$stmt = exec_query($query, $domain);
+	$domainId = $stmt->fields['domain_id'];
+	return($domainId);
+
+}
+
+/**
+ * Get domain admin id by domain id
+ *
+ * @param $domainId
+ * @return string
+ */
+function getDomainAdminIdByDomainId($domainId)
+{
+	$query = '
+		SELECT
+			domain_admin_id
+		FROM
+			domain
+		WHERE
+			domain_id = ?
+	';
+	$stmt = exec_query($query, $domainId);
+	$domainAdminId = $stmt->fields['domain_admin_id'];
+	return($domainAdminId);
+}
+
+/**
+ * Get database id
+ *
+ * @param int $domainId
+ * @param string $dbName
+ * @return int
+ */
+function getDbId($domainId, $dbName){
+	$query = '
+		SELECT
+			sqld_id
+		FROM
+			sql_database
+		WHERE
+			domain_id = ?
+		AND
+			sqld_name = ?
+	';
+	$stmt = exec_query($query, array( $domainId, $dbName));
+	$dbId = $stmt->fields['sqld_id'];
+	return($dbId);
+}
+/**
+ * Get database id
+ *
+ * @param int $domainId
+ * @param string $dbName
+ * @return int
+ */
+function getDbUserValues($sqlUser){
+	$query = '
+		SELECT
+			sqlu_id,
+			sqlu_host,
+			sqlu_pass
+		FROM
+			sql_user
+		WHERE
+			sqlu_name = ?
+	';
+	$stmt = exec_query($query, $sqlUser);
+	return array(
+		$stmt->fields['sqlu_id'], $stmt->fields['sqlu_host'], $stmt->fields['sqlu_pass']
+	);
+}

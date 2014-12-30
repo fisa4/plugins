@@ -65,7 +65,7 @@ function addSubDomain($resellerId, $postData)
     $domainId = $stmt->fields['domain_id'];
 
     $checkQuery = "SELECT `domain_id` FROM `subdomain` WHERE `subdomain_name` = ? AND `domain_id` = ?";
-    $stmt = exec_query($checkQuery, array($sub, $domainId));
+    $stmt = exec_query($checkQuery, array($postData['subdomain'], $domainId));
 
     if ($stmt->rowCount() != 0){
         logoutReseller();

@@ -52,17 +52,7 @@ function getMailList($resellerId, $domain)
         );
     }
 
-    $query = '
-		SELECT
-			domain_id,
-			domain_admin_id
-		FROM
-			domain
-		WHERE
-			domain_name = ?
-	';
-    $stmt = exec_query($query, $domain);
-    $domainId = $stmt->fields['domain_id'];
+    $domainId = getDomainIdByDomain($domain);
 
     $query = '
 		SELECT
@@ -343,9 +333,6 @@ function addMailAccount($resellerId, $postData)
  */
 function checkMail($postData)
 {
-    $db = iMSCP_Registry::get('db');
-    $auth = iMSCP_Authentication::getInstance();
-
     if (empty($postData['domain']) || empty($postData['account'])) {
         logoutReseller();
         exit(
@@ -353,7 +340,7 @@ function checkMail($postData)
             array(
                 'level' => 'Error',
                 'message' => sprintf('No domain (%s) or account (%s) in post data available.',
-                    $domain, $account)
+                    $postData['domain'], $postData['account'])
             )
         )
         );
@@ -498,16 +485,4 @@ function deleteMail($resellerId, $postData)
         )
         );
     }
-}
-
-/**
- * Edit mail
- *
- * @param int $resellerId Reseller unique identifier
- * @param array $postData POST data
- * @return void
- */
-function editMail($resellerId, $postData)
-{
-    // TODO: Add code to edit Email address
 }

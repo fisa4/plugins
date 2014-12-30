@@ -2,15 +2,35 @@ i-MSCP RemoteBridge plugin ChangeLog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ------------------------------------------------------------------------------------------------------------------------
+Version 0.0.7
+------------------------------------------------------------------------------------------------------------------------
+
+	- Added: Add SQL database
+    		- action 'add_sql_db'
+    - Added: Delete SQL database
+    		- action 'delete_sql_db'
+    - Added: Get SQL databases
+    	- action 'get_sql_db'
+    - Added: Add SQL user
+    	- action 'add_sql_user'
+    - Added: Delete SQL user
+    	- action 'delete_sql_user'
+	- Added: Edit SQL user password
+    	- action 'edit_sql_user_pass'
+	- Merged: Send welcome mail to new customer
+	- Fixed: Bugs and undefined indexes in createNewUser
+
+------------------------------------------------------------------------------------------------------------------------
 Version 0.0.6
 ------------------------------------------------------------------------------------------------------------------------
 
-	- Added: Get all i-MSCP accounts
+	- Added: Check for an existing Mail account
 		- action 'check_mail'
-	- Added: Update an existing i-MSCP account
+	- Added: Delete an existing Mail account
 		- action 'delete_mail'
 	- Fix: Bugs and missing arrays in function addMailAccount()
 	- Fix: Some CS
+
 ------------------------------------------------------------------------------------------------------------------------
 Version 0.0.5
 ------------------------------------------------------------------------------------------------------------------------

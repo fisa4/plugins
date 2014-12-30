@@ -1,4 +1,4 @@
-## i-MSCP RemoteBridge plugin v0.0.6
+## i-MSCP RemoteBridge plugin v0.0.5
 
 Plugin providing an API which allows to manage i-MSCP accounts.
 
@@ -19,7 +19,7 @@ See [GPL v2](http://www.gnu.org/licenses/gpl-2.0.html "GPL v2")
 
 ### REQUIREMENTS
 
-Plugin compatible with i-MSCP versions >= 1.1.18
+Plugin compatible with i-MSCP versions >= 1.1.0
 
 ### INSTALLATION
 
@@ -127,17 +127,35 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 
 	- Adds a new mail account to an existing i-MSCP account
 
-**1.10.** action check_mail
-
-	- Checks the existence of a mail account in an existing i-MSCP account
-
-**1.11.** action delete_mail
-
-	- Deletes a mail account from an existing i-MSCP account
-
-**1.12.** action collectusagedata
+**1.10.** action collectusagedata
 
 	- Collects all usage data of an existing i-MSCP account
+	
+**1.11.** action add_sql_db
+
+	- Adds a new database to an existing i-MSCP account
+
+**1.12.** action delete_sql_db
+
+	- Deletes a database from an existing i-MSCP account
+
+**1.13.** action get_sql_db
+
+	- Gets a list of database from an existing i-MSCP account
+
+**1.14.** action add_sql_user
+
+	- Adds a new database user to an existing i-MSCP account
+
+**1.15.** action delete_sql_user
+
+	- Deletes a database user from an existing i-MSCP account
+
+**1.16.** action edit_sql_user_pass
+
+	- Edits a database user password for an existing i-MSCP account
+
+**-- Depending of the action there are different required postData values --**
 
 **2.** reseller_username (required)
 
@@ -282,12 +300,12 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 	- street2: additional street informations
 	- gender: value can be "U=unknown, F=female, M=male"
 
+### You can find a class file with sample postData values for some actions in sample folder.
+
 ### AUTHORS AND CONTRIBUTORS
 
  * Sascha Bay <info@space2place.de> (Author)
  * Peter Ziergöbel <info@fisa4.de> (Contributor)
  * Ninos Ego <me@ninosego.de> (Contributor)
- * Thom Heemstra <thom@heemstra.us> (Contributor)
- * Christian Wolf (Contributor)
 
 **Thank you for using this plugin.**

@@ -37,8 +37,8 @@ return array(
 		'Christian Wolf'
 	),
 	'email' => 'team@i-mscp.net',
-	'version' => '0.0.6',
-	'date' => '2014-12-21',
+	'version' => '0.0.7',
+	'date' => '2014-12-30',
 	'name' => 'RemoteBridge',
 	'desc' => 'Plugin providing an API which allows to manage i-MSCP accounts.',
 	'url' => 'http://wiki.i-mscp.net/doku.php?id=plugins:remotebridge'

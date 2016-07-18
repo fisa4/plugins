@@ -116,10 +116,10 @@ function addMailAccount($resellerId, $postData)
     $domain = encode_idna(strtolower($postData['domain']));
     $account = (isset($postData['account'])) ? clean_input($postData['account']) : '';
     $address = (!empty($account)) ? $account . '@' . $domain : '';
-    $accountType = (isset($postData['account_type'])) ? explode(',', clean_input($postData['account_type'])) : array('normal_mail');
-    $quota = (isset($postData['quota'])) ? clean_input($postData['quota']) * 1048576 : '0';
+    $accountType = (isset($postData['account_type'])) ? explode(',', str_replace(' ', '', clean_input($postData['account_type']))) : array('normal_mail');
+    $quota = (isset($postData['quota']) && in_array('normal_mail', $accountType)) ? clean_input($postData['quota']) * 1048576 : '0';
     $forwardList = (isset($postData['mail_forward']) && in_array('normal_forward', $accountType)) ? explode(',', clean_input($postData['mail_forward'])) : array('');
-    $pass = (isset($postData['mail_pass'])) && in_array('normal_mail', $accountType) ? clean_input($postData['mail_pass']) : '_no_';
+    $pass = (isset($postData['newmailpass'])) && in_array('normal_mail', $accountType) ? clean_input($postData['newmailpass']) : '_no_';
 
     if(!chk_email($address)) {
         logoutReseller();
@@ -272,7 +272,7 @@ function addMailAccount($resellerId, $postData)
             $query,
             array(
                 $account, $pass, implode(',', array_unique($forwardList)), $domainId,
-                implode(',', array_unique($accountType)), '0', $cfg->ITEM_TOADD_STATUS,
+                implode(',', array_unique($accountType)), '0', 'toadd',
                 '0', NULL, $quota, $address
             )
         );
@@ -289,13 +289,13 @@ function addMailAccount($resellerId, $postData)
 
         send_request();
 
-        write_log(
+        /* write_log(
             sprintf(
                 "%s add Mail: %s (for domain: %s) via remote bridge.",
-                decode_idna($auth->getIdentity()->admin_name), $address, $domain
+                decode_idna($postData['reseller_username']), $address, $domain
             ),
             E_USER_NOTICE
-        );
+        ); */
 
         update_reseller_c_props($resellerId);
         $db->commit();
@@ -393,7 +393,7 @@ function deleteMail($resellerId, $postData)
         createJsonMessage(
             array(
                 'level' => 'Error',
-                'message' => 'No domain, account, email password, quota, or account type in post data available.'
+                'message' => 'No domain or account in post data available.'
             )
         )
         );
@@ -411,7 +411,7 @@ function deleteMail($resellerId, $postData)
         write_log(
             sprintf(
                 "%s deletion failed for domain: %s via remote bridge. Mailaddress %s non-existent",
-                decode_idna($auth->getIdentity()->admin_name), $domain, $address
+                decode_idna($postData['reseller_username']), $domain, $address
             ),
             E_USER_NOTICE
         );
@@ -432,7 +432,7 @@ function deleteMail($resellerId, $postData)
 
         iMSCP_Events_Manager::getInstance()->dispatch(iMSCP_Events::onBeforeDeleteMail, array('mailId' => $mailId));
 
-        exec_query('UPDATE `mail_users` SET `status` = ? WHERE `mail_id` = ?', array($cfg->ITEM_TODELETE_STATUS, $mailId));
+        exec_query('UPDATE `mail_users` SET `status` = ? WHERE `mail_id` = ?', array('todelete', $mailId));
 
 
         exec_query(
@@ -444,7 +444,7 @@ function deleteMail($resellerId, $postData)
 				WHERE
 					`mail_acc` = ? OR `mail_acc` LIKE ? OR `mail_acc` LIKE ? OR `mail_acc` LIKE ?
 			',
-            array($cfg->ITEM_TODELETE_STATUS, $address, "$address,%", "%,$address,%", "%,$address")
+            array('todelete', $address, "$address,%", "%,$address,%", "%,$address")
         );
 
         delete_autoreplies_log_entries($address);
@@ -455,7 +455,7 @@ function deleteMail($resellerId, $postData)
         write_log(
             sprintf(
                 "%s deleted Mail: %s (for domain: %s) via remote bridge.",
-                decode_idna($auth->getIdentity()->admin_name), $address, $domain
+                decode_idna($postData['reseller_username']), $address, $domain
             ),
             E_USER_NOTICE
         );

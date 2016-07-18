@@ -1,0 +1,37 @@
+<?php
+session_start();
+?>
+
+<form action="get.php" method="post">
+<input type="text" name="reseller">
+<input type="submit">
+</form>
+
+<?php
+$_SESSION['reseller'] = $_POST['reseller'];
+
+function dataEncryption($dataToEncrypt, $ResellerUsername) {
+    return strtr(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, md5($ResellerUsername), serialize($dataToEncrypt), MCRYPT_MODE_CBC, md5(md5($ResellerUsername)))), '+/=', '-_,');
+}
+if($_SESSION['reseller'] !=''){
+$bridgeKey = '';
+$ResellerUsername = $_SESSION['reseller'];
+
+$dataToEncrypt = array(
+        'action'                => 'get_users',
+        'reseller_username'     => $ResellerUsername,
+        'reseller_password'     => '',
+        'bridge_key'            => $bridgeKey
+);
+$ch = curl_init('http://admin.server.example.org:8080/remotebridge.php');
+curl_setopt($ch, CURLOPT_POST, 1).'<br>';
+curl_setopt($ch, CURLOPT_POSTFIELDS, 'key='.$bridgeKey.'&data='.dataEncryption($dataToEncrypt, $ResellerUsername)).'<br>';
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1).'<br>';
+
+$httpResponse = curl_exec($ch);
+curl_close($ch);
+
+echo '<hr>';
+echo $httpResponse;
+}
+?>

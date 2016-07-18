@@ -116,7 +116,7 @@ function addSubDomain($resellerId, $postData)
 				)
 			";
 
-            exec_query($query, array($domainId, $subLabelAscii, $mountPoint, $forwardUrl, $cfg->ITEM_TOADD_STATUS));
+            exec_query($query, array($domainId, $subLabelAscii, $mountPoint, $forwardUrl, 'toadd'));
 
             update_reseller_c_props($resellerId);
             $db->commit();

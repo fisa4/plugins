@@ -1,7 +1,7 @@
 <?php
 /**
  * i-MSCP - internet Multi Server Control Panel
- * Copyright (C) 2010-2014 by i-MSCP Team
+ * Copyright (C) 2010-2016 by i-MSCP Team
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,9 +20,9 @@
  * @category    iMSCP
  * @package     iMSCP_Plugin
  * @subpackage  RemoteBridge
- * @copyright   2010-2014 by i-MSCP Team
+ * @copyright   2010-2016 by i-MSCP Team
  * @author      Sascha Bay <info@space2place.de>
- * @author      Ninos Ego <me@ninosego.de>
+ * @author		Peter Ziergoebel <info@fisa4.de>
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
@@ -34,8 +34,8 @@
  * @package     iMSCP_Plugin
  * @subpackage  RemoteBridge
  * @author      Sascha Bay <info@space2place.de>
- * @author      Ninos Ego <me@ninosego.de>
  */
+ 
 class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 {
 	/**
@@ -47,7 +47,6 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 	{
 		$eventsManager->registerListener(
 			array(
-				iMSCP_Events::onBeforeInstallPlugin,
 				iMSCP_Events::onResellerScriptStart,
 				iMSCP_Events::onAfterDeleteUser
 			),
@@ -55,23 +54,6 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 		);
 	}
 
-	/**
-	 * onBeforeInstallPlugin event listener
-	 *
-	 * @param iMSCP_Events_Event $event
-	 */
-	public function onBeforeInstallPlugin($event)
-	{
-		if ($event->getParam('pluginName') == $this->getName()) {
-			if (version_compare($event->getParam('pluginManager')->getPluginApiVersion(), '0.2.0', '<')) {
-				set_page_message(
-					tr('Your i-MSCP version is not compatible with this plugin. Try with a newer version.'), 'error'
-				);
-
-				$event->stopPropagation();
-			}
-		}
-	}
 
 	/**
 	 * Process plugin installation
@@ -125,12 +107,9 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 	 */
 	public function onAfterDeleteUser($event)
 	{
-		/** @var iMSCP_Config_Handler_File $cfg */
-		$cfg = iMSCP_Registry::get('config');
-
 		exec_query(
 			'UPDATE `remote_bridge` SET `bridge_status` = ? WHERE `bridge_admin_id` = ?',
-			array($cfg->ITEM_TODELETE_STATUS, $event->getParam('userId'))
+			array('todelete', $event->getParam('userId'))
 		);
 
 		send_request();
@@ -143,19 +122,16 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 	 */
 	public function getRoutes()
 	{
-		$pluginDir = PLUGINS_PATH . '/' . $this->getName();
+		$pluginDir = $this->getPluginManager()->pluginGetDirectory() . '/' . $this->getName();
 
 		return array(
-			'/reseller/remotebridge.php' => $pluginDir . '/frontend/remotebridge.php',
+			'/reseller/remotebridge.php' => $pluginDir . '/frontend/reseller/remotebridge.php',
 			'/remotebridge.php' => $pluginDir . '/public/remotebridge.php',
 			'/remotebridge.core.php' => $pluginDir . '/public/remotebridge.core.php',
 			'/remotebridge.user.php' => $pluginDir . '/public/remotebridge.user.php',
 			'/remotebridge.domain.php' => $pluginDir . '/public/remotebridge.domain.php',
 			'/remotebridge.alias.php' => $pluginDir . '/public/remotebridge.alias.php',
-			'/remotebridge.mail.php' => $pluginDir . '/public/remotebridge.mail.php',
-			'/remotebridge.database.php' => $pluginDir . '/public/remotebridge.database.php',
-			'/remotebridge.dns.php' => $pluginDir . '/public/remotebridge.dns.php',
-			'/remotebridge.ftp.php' => $pluginDir . '/public/remotebridge.ftp.php'
+			'/remotebridge.mail.php' => $pluginDir . '/public/remotebridge.mail.php'
 		);
 	}
 
@@ -166,7 +142,6 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 	 */
 	public function getItemWithErrorStatus()
 	{
-		$cfg = iMSCP_Registry::get('config');
 		$stmt = exec_query(
 			"
 				SELECT
@@ -178,9 +153,9 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 					`bridge_status` NOT IN(?, ?, ?, ?, ?, ?, ?)
 			",
 			array(
-				$cfg['ITEM_OK_STATUS'], $cfg['ITEM_DISABLED_STATUS'], $cfg['ITEM_TOADD_STATUS'],
-				$cfg['ITEM_TOCHANGE_STATUS'], $cfg['ITEM_TOENABLE_STATUS'], $cfg['ITEM_TODISABLE_STATUS'],
-				$cfg['ITEM_TODELETE_STATUS']
+				'ok', 'disabled', 'toadd',
+				'tochange', 'toenable', 'todisable',
+				'todelete'
 			)
 		);
 
@@ -202,10 +177,8 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 	public function changeItemStatus($table, $field, $itemId)
 	{
 		if ($table == 'remote_bridge' && $field == 'bridge_status') {
-			$cfg = iMSCP_Registry::get('config');
-
 			exec_query(
-				"UPDATE `$table` SET `$field` = ?  WHERE `bridge_id` = ?", array($cfg['ITEM_TOCHANGE_STATUS'], $itemId)
+				"UPDATE `$table` SET `$field` = ?  WHERE `bridge_id` = ?", array('tochange', $itemId)
 			);
 		}
 	}
@@ -217,14 +190,11 @@ class iMSCP_Plugin_RemoteBridge extends iMSCP_Plugin_Action
 	 */
 	public function getCountRequests()
 	{
-		/** @var $cfg iMSCP_Config_Handler_File */
-		$cfg = iMSCP_Registry::get('config');
-
 		$stmt = exec_query(
 			'SELECT COUNT(`bridge_id`) AS `count` FROM `remote_bridge` WHERE `bridge_status` IN (?, ?, ?, ?, ?)',
 			array(
-				$cfg['ITEM_TOADD_STATUS'], $cfg['ITEM_TOCHANGE_STATUS'], $cfg['ITEM_TOENABLE_STATUS'],
-				$cfg['ITEM_TODISABLE_STATUS'], $cfg['ITEM_TODELETE_STATUS']
+				'toadd', 'tochange', 'toenable',
+				'todisable', 'todelete'
 			)
 		);
 

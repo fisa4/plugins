@@ -37,10 +37,6 @@
  */
 function addAliasDomain($resellerId, $resellerIpaddress, $postData)
 {
-	//$db = iMSCP_Registry::get('db');
-	//$cfg = iMSCP_Registry::get('config');
-	//$auth = iMSCP_Authentication::getInstance();
-
 	if (empty($postData['domain']) || count($postData['alias_domains']) == 0) {
 		logoutReseller();
 		exit(
@@ -107,7 +103,6 @@ function createAliasDomain($resellerId, $customerDmnId, $domain_ip_id, $postData
 {
 	$db = iMSCP_Registry::get('db');
 	$cfg = iMSCP_Registry::get('config');
-	$auth = iMSCP_Authentication::getInstance();
 
 	foreach ($postData['alias_domains'] as $aliasdomain) {
 		$aliasdomain = strtolower($aliasdomain);
@@ -151,7 +146,7 @@ function createAliasDomain($resellerId, $customerDmnId, $domain_ip_id, $postData
 					?, ?, ?, ?, ?
 				)
 			";
-			exec_query($query, array($customerDmnId, $alias_domain, $mountPoint, $cfg->ITEM_TOADD_STATUS, $domain_ip_id));
+			exec_query($query, array($customerDmnId, $alias_domain, $mountPoint, 'toadd', $domain_ip_id));
 
 			$alsId = $db->insertId();
 
@@ -227,7 +222,7 @@ function createAliasDomain($resellerId, $customerDmnId, $domain_ip_id, $postData
 		write_log(
 			sprintf(
 				'%s added domain alias: %s via remote bridge',
-				decode_idna($auth->getIdentity()->admin_name),
+				decode_idna($_SESSION['user_id']),
 				$aliasdomain
 			),
 			E_USER_NOTICE

@@ -1,7 +1,6 @@
 <?php
 /**
- * i-MSCP RemoteBridge plugin
- * Copyright (C) 2013-2016 Sascha Bay <info@space2place.de>
+ * i-MSCP - internet Multi Server Control Panel
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,18 +18,5 @@
  */
 
 return array(
-	'author' => array(
-		'Sascha Bay',
-		'Peter Ziergoebel',
-		'Ninos Ego',
-		'Thom Heemstra',
-		'Christian Wolf'
-	),
-	'email' => 'info@fisa4.de',
-	'version' => '1.0.0',
-	'require_api' => '1.0.0',
-	'date' => '2016-07-19',
-	'name' => 'RemoteBridge',
-	'desc' => 'Plugin which provides a RemoteBridge implementation for i-MSCP. It is not supported by i-MSCP Team. Only by FISA4 (info@fisa4.de)',
-	'url' => 'http://wiki.i-mscp.net/doku.php?id=plugins:remotebridge'
+	'bridge_status' => 'OK'
 );

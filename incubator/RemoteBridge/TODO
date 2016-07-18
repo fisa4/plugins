@@ -1,0 +1,12 @@
+Add User/Domain
+- Fix php-setting issues while add or update user/domain
+- Review action add_user
+- Review action update_user
+
+DNS records
+- Add code for edit and delete 
+- add more checkings for record types
+
+Check core code for security issues
+
+Check whole code for 'undefined index' notices

@@ -43,13 +43,13 @@ function addFtpAccount($resellerId, $postData)
 
     if (empty($postData['username']) || empty($postData['domain']) ||
         empty($postData['password']) || empty($postData['password_repeat']) ||
-        empty($postData['home_dir'])) {
+        empty($postData['home_dir']) || empty($postData['seperator'])) {
         logoutReseller();
         exit(
         createJsonMessage(
             array(
                 'level' => 'Error',
-                'message' => 'No domain, username, password, password_repeat or home_dir in post data available.'
+                'message' => 'No domain, username, password, password_repeat, home_dir or seperator (i.e. @) in post data available.'
             )
         )
         );
@@ -62,7 +62,8 @@ function addFtpAccount($resellerId, $postData)
     $homeDir = clean_input($postData['home_dir']);
     $domainId = getDomainIdByDomain($dmnName);
     $domainAdminId = getDomainAdminIdByDomainId($domainId);
-
+    $resellerName = $postData['reseller_username'];
+    $seperator = clean_input($postData['seperator']);
 
     if (!validates_username($username)) {
         logoutReseller();
@@ -139,10 +140,10 @@ function addFtpAccount($resellerId, $postData)
         }
         /** @var $cfg iMSCP_Config_Handler_File */
         $cfg = iMSCP_Registry::get('config');
-        $userId = $username . $cfg->FTP_USERNAME_SEPARATOR . decode_idna($dmnName);
+        $userId = $username . $seperator . decode_idna($dmnName);
         $encryptedPassword = cryptPasswordWithSalt($passwd);
-        $shell = $cfg->CMD_SHELL;
-        $homeDir = rtrim(str_replace('//', '/', $cfg->FTP_HOMEDIR . '/' . $dmnName . '/' . $homeDir), '/');
+        $shell = '/bin/sh';
+        $homeDir = $cfg['USER_WEB_DIR'] . '/' . $dmnName . $homeDir;
         // Retrieve customer uid/gid
         $query = '
 				SELECT
@@ -243,7 +244,7 @@ function addFtpAccount($resellerId, $postData)
                     'ftpUserHome' => $homeDir
                 )
             );
-            write_log(sprintf("%s added Ftp account: %s", $_SESSION['user_logged'], $userId), E_USER_NOTICE);
+            write_log(sprintf("%s added Ftp account: %s", $resellerName, $userId), E_USER_NOTICE);
     update_reseller_c_props($resellerId);
     logoutReseller();
     exit(
@@ -267,6 +268,188 @@ function addFtpAccount($resellerId, $postData)
 function editFtp($resellerId, $postData)
 {
     // TODO: Add code to edit FTP account
+    /** @var $db iMSCP_Database */
+    $db = iMSCP_Database::getInstance();
+
+    if (empty($postData['username']) || empty($postData['domain']) ||
+        empty($postData['password']) || empty($postData['password_repeat']) ||
+        empty($postData['home_dir']) || empty($postData['seperator'])) {
+        logoutReseller();
+        exit(
+        createJsonMessage(
+            array(
+                'level' => 'Error',
+                'message' => 'No domain, username, password, password_repeat, home_dir or seperator (i.e. @) in post data available.'
+            )
+        )
+        );
+    }
+
+    $username = (isset($postData['username'])) ? clean_input($postData['username']) : '';
+    $dmnName = (isset($postData['domain'])) ? encode_idna($postData['domain']) : '';
+    $passwd = (isset($postData['password'])) ? clean_input($postData['password']) : '';
+    $passwdRepeat = (isset($postData['password_repeat'])) ? clean_input($postData['password_repeat']) : '';
+    $homeDir = (isset($postData['home_dir'])) ? encode_idna($postData['home_dir']) : '/htdocs';
+    $domainId = getDomainIdByDomain($dmnName);
+    $domainAdminId = getDomainAdminIdByDomainId($domainId);
+    $resellerName = (isset($postData['reseller_username'])) ? encode_idna($postData['reseller_username']) : '';
+    $seperator = (isset($postData['seperator'])) ? clean_input($postData['seperator']) : '';
+
+    if (!validates_username($username)) {
+        logoutReseller();
+        exit(
+        createJsonMessage(
+            array(
+                'level' => 'Error',
+                'message' => 'Incorrect username length or syntax.'
+            )
+        )
+        );
+    }
+    if ($passwd !== $passwdRepeat) {
+        logoutReseller();
+        exit(
+        createJsonMessage(
+            array(
+                'level' => 'Error',
+                'message' => 'Passwords do not match.'
+            )
+        )
+        );
+    } elseif (!checkPasswordSyntax($passwd)) {
+        logoutReseller();
+        exit(
+        createJsonMessage(
+            array(
+                'level' => 'Error',
+                'message' => 'Passwords syntax is invalid.'
+            )
+        ));
+    }
+    // Check for home directory existence
+    if ($homeDir != '/' && $homeDir != '') {
+        // Strip possible double-slashes
+        $homeDir = str_replace('//', '/', $homeDir);
+        // Check for updirs '..'
+        if (strpos($homeDir, '..') !== false) {
+            logoutReseller();
+            exit(
+            createJsonMessage(
+                array(
+                    'level' => 'Error',
+                    'message' => 'Invalid home directory.'
+                )
+            ));
+        }
+
+            $vfs = new iMSCP_VirtualFileSystem($dmnName);
+            if (!$vfs->exists($homeDir)) {
+                logoutReseller();
+                exit(
+                createJsonMessage(
+                    array(
+                        'level' => 'Error',
+                        'message' => sprintf('Home directory %s does not exists', $homeDir)
+                    )
+                )
+                );
+            }
+
+    }
+        // Check that the customer is the owner of the domain for which the ftp Account is added
+        if (!customerHasDomain($dmnName, $domainAdminId)) {
+            logoutReseller();
+            exit(
+            createJsonMessage(
+                array(
+                    'level' => 'Error',
+                    'message' => sprintf('Customer is not allowed to add FTP account for this domain: %s', $dmnName)
+                )
+            )
+            );
+        }
+        /** @var $cfg iMSCP_Config_Handler_File */
+        $cfg = iMSCP_Registry::get('config');
+        $userId = $username . $seperator . decode_idna($dmnName);
+        $encryptedPassword = cryptPasswordWithSalt($passwd);
+        $homeDir = $cfg['USER_WEB_DIR'] . '/' . $dmnName . $homeDir;
+        // Retrieve customer uid/gid
+        $query = '
+				SELECT
+					`t1`.`admin_name`, `t1`.`admin_sys_uid`, `t1`.`admin_sys_gid`, `t2`.`domain_disk_limit`,
+					count(`t3`.`name`) AS `quota_entry`
+				FROM
+					`admin` AS `t1`
+				LEFT JOIN
+					`domain` AS `t2` ON (`t2`.`domain_admin_id` = `t1`.`admin_id` )
+				LEFT JOIN
+					`quotalimits` AS `t3` ON (`t3`.`name` = `t1`.`admin_name` )
+				WHERE
+					`t1`.`admin_id` = ?
+			';
+        $stmt = exec_query($query, $domainAdminId);
+        $groupName = $stmt->fields['admin_name'];
+        $uid = $stmt->fields['admin_sys_uid'];
+        $gid = $stmt->fields['admin_sys_gid'];
+        $diskspaceLimit = $stmt->fields['domain_disk_limit'];
+        $quotaEntriesExist = ($stmt->fields['quota_entry']) ? true : false;
+
+    iMSCP_Events_Manager::getInstance()->dispatch(
+        iMSCP_Events::onBeforeEditFtp,
+            array(
+                'ftpUserId' => $userId
+            )
+        );
+        try {
+            $db->beginTransaction();
+            // Add ftp user
+            $query = "
+					UPDATE 
+						`ftp_users` 
+					SET 
+						`admin_id` = ?, `passwd` = ?, 
+						`rawpasswd` = ?, `homedir` = ?
+					WHERE 
+						`userid` = ?
+				";
+            exec_query(
+                $query, array($domainAdminId, $encryptedPassword, $passwd, $homeDir, $userId)
+            );
+            $db->commit();
+        } catch (iMSCP_Exception_Database $e) {
+            $db->rollBack();
+            if ($e->getCode() == 23000) {
+                logoutReseller();
+                exit(
+                createJsonMessage(
+                    array(
+                        'level' => 'Error',
+                        'message' => 'Account already exists.'
+                    )
+                )
+                );
+            } else {
+                throw $e;
+            }
+        }
+    iMSCP_Events_Manager::getInstance()->dispatch(
+        iMSCP_Events::onAfterEditFtp,
+                array(
+                    'ftpUserId' => $userId
+                )
+            );
+            write_log(sprintf("%s edited Ftp account: %s", $resellerName, $userId), E_USER_NOTICE);
+    update_reseller_c_props($resellerId);
+    logoutReseller();
+    exit(
+    createJsonMessage(
+        array(
+            'level' => 'Success',
+            'message' => sprintf('FTP account %s edited.', $userId)
+        )
+    )
+    );
+
 }
 
 /**
@@ -282,13 +465,13 @@ function deleteFtp($resellerId, $postData)
     $cfg = iMSCP_Registry::get('config');
     $db = iMSCP_Database::getInstance();
 
-    if (empty($postData['username']) || empty($postData['domain']) || empty($postData['log_user'])) {
+    if (empty($postData['username']) || empty($postData['domain']) || empty($postData['log_user']) || empty($postData['seperator'])) {
         logoutReseller();
         exit(
         createJsonMessage(
             array(
                 'level' => 'Error',
-                'message' => 'No domain, username or log_user in post data available.'
+                'message' => 'No domain, username, log_user or seperator in post data available.'
             )
         )
         );
@@ -297,11 +480,12 @@ function deleteFtp($resellerId, $postData)
     $domain = encode_idna($postData['domain']);
     $username = clean_input($postData['username']);
     $logUser = clean_input($postData['log_user']);
+    $seperator = clean_input($postData['seperator']);
 
-    $ftpUserId = $username . $cfg->FTP_USERNAME_SEPARATOR . $domain;
+    $ftpUserId = $username . $seperator . $domain;
 
     if (!empty($domain) && !empty($username)) {
-        $ftpUserId = $username . $cfg->FTP_USERNAME_SEPARATOR . $domain;
+        $ftpUserId = $username . $seperator . $domain;
         $domainId = getDomainIdByDomain($domain);
         $domainAdminId = getDomainAdminIdByDomainId($domainId);
 
@@ -347,7 +531,7 @@ function deleteFtp($resellerId, $postData)
             }
             exec_query('DELETE FROM `ftp_users` WHERE `userid` = ?', $ftpUserId);
 
-            if(isset($cfg->FILEMANAGER_ADDON) && $cfg->FILEMANAGER_ADDON == 'AjaXplorer') {
+            if(isset($cfg->FILEMANAGER_PACKAGE) && $cfg->FILEMANAGER_PACKAGE == 'Pydio') {
                 // Quick fix to delete Ftp preferences directory as created by AjaXplorer (Pydio)
                 // FIXME: Move this statement at engine level
                 $userPrefDir = $cfg->GUI_PUBLIC_DIR . '/tools/filemanager/data/plugins/auth.serial/' . $ftpUserId;

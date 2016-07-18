@@ -1,4 +1,4 @@
-##Â i-MSCP RemoteBridge plugin v0.0.7
+### i-MSCP RemoteBridge plugin v1.0.0 
 
 Plugin providing an API which allows to manage i-MSCP accounts.
 
@@ -19,46 +19,39 @@ See [GPL v2](http://www.gnu.org/licenses/gpl-2.0.html "GPL v2")
 
 ### REQUIREMENTS
 
-Plugin compatible with i-MSCP versions >= 1.1.18
+Plugin compatible with i-MSCP versions >= 1.2.17
+
+** For security reasons, it is currently not recommend to use this plugin in production environment. USE IT ONLY FOR TESTS **
 
 ### INSTALLATION
 
 	- Login into the panel as admin and go to the plugin management interface
-	- Upload the RemoteBridge plugin archive
+	- Upload the RemoteBridge plugin archive (.zip or .tar.gz)
 	- Activate the plugin
-	- Login into the panel as reseller, and create a Bridge key and a server ipaddress which should have access to the remote bridge
-	- Add the url http(s)://adminurl.tld/remotebridge.php to your website where you want to manage i-MSCP accounts from
+	- Login into the panel as reseller, and create a Bridge key add a server ipaddress which should have access to the remote bridge. (it is also possible to use ipv6)
+	- Add the url http(s)://admin.server.example.org:8080/remotebridge.php to your website where you want to manage i-MSCP accounts from
 
 ### UPDATE
 
-**1.** Get the plugin from github
-
-	# cd /usr/local/src
-	# git clone git://github.com/i-MSCP/plugins.git
-
-**2.** Create new Plugin archive
-
-	# cd plugins
-	# tar cvzf RemoteBridge.tar.gz RemoteBridge
-
-**3.** Plugin upload and update
+** Plugin upload and update **
 
 	- Login into the panel as admin and go to the plugin management interface
 	- Upload the RemoteBridge plugin archive
 	- Update the plugin list through the plugin interface
 
-### How to send data to the remote bridge (example)
+### How to send data to the remote bridge (examples also available in sample folder)
 
 	function dataEncryption($dataToEncrypt, $ResellerUsername) {
 		return strtr(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, md5($ResellerUsername), serialize($dataToEncrypt), MCRYPT_MODE_CBC, md5(md5($ResellerUsername)))), '+/=', '-_,');
 	}
 	$bridgeKey = '';
 	$ResellerUsername = '';
+	$ResellerPassword = '';
 
 	$dataToEncrypt = array(
 			'action'                => '',
 			'reseller_username'     => $ResellerUsername,
-			'reseller_password'     => '',
+			'reseller_password'     => $ResellerPassword,
 			'bridge_key'            => $bridgeKey,
 			'hosting_plan'			=> '',
 			'admin_pass'            => '',
@@ -66,7 +59,7 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 			'domain'                => ''
 	);
 
-	$ch = curl_init('http(s)://admin.myserver.tld/remotebridge.php');
+	$ch = curl_init('http(s)://admin.server.example.org:8080/remotebridge.php');
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, 'key='.$bridgeKey.'&data='.dataEncryption($dataToEncrypt, $ResellerUsername));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -77,7 +70,7 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 
 ### Post data variables which are available / required
 
-**1.** key (required)
+**1.** bridgeKey (required)
 
 	- This is your own bridge key
 	
@@ -87,9 +80,9 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 	
 ### Encrypted array variables which are available / required
 
-**1.** action (required)
+**1.** action (required) (you can find samples for all working actions in "sample" folder)
 
-	- This actions are available: get_users, create_user, enable_user, disable_user, delete_user, update_user, add_alias, get_mails, add_mail, collectusagedata
+	- This and more actions are available: get_users, create_user, enable_user, disable_user, delete_user, update_user, add_alias, get_mails, add_mail
 
 **1.1.** action get_users
 
@@ -127,7 +120,7 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 
 	- Adds a new mail account to an existing i-MSCP account
 
-**1.10.** action collectusagedata
+**1.10.** action collectusagedata (NOT WORKING)
 
 	- Collects all usage data of an existing i-MSCP account
 	
@@ -155,7 +148,32 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 
 	- Edits a database user password for an existing i-MSCP account
 
+**1.17.** action add_ftp
+
+	- Adds a FTP account
+
+**1.18.** action edit_ftp
+
+	- Edits a FTP account
+
+**1.19.** action delete_ftp
+
+	- Deletes FTP account
+
+**1.20.** action add_dns_record
+
+	- Adds DNS record
+
+**1.21.** action add_dns_record
+
+	- Edits DNS record
+
+**1.22.** action add_dns_record
+
+	- Deletes DNS record
+
 **-- Depending of the action there are different required postData values --**
+**-- in next release you will find the possible values in the "possible_values.txt" file --** 
 
 **2.** reseller_username (required)
 
@@ -169,11 +187,11 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 
 	- This will be later the new login of the i-MSCP panel
 
-**5.** admin_pass (required)
+**5.** admin_pass (required for some actions)
 
 	- Password for the new login of the i-MSCP panel
 
-**6.** email (required)
+**6.** email (required for some actions)
 
 	- Emailadress for the new login of the i-MSCP panel
 
@@ -305,7 +323,11 @@ Plugin compatible with i-MSCP versions >= 1.1.18
 ### AUTHORS AND CONTRIBUTORS
 
  * Sascha Bay <info@space2place.de> (Author)
- * Peter ZiergÃ¶bel <info@fisa4.de> (Contributor)
+ * Peter Ziergöbel <info@fisa4.de> (Contributor)
  * Ninos Ego <me@ninosego.de> (Contributor)
 
 **Thank you for using this plugin.**
+
+KNOWN ISSUES
+Currently it is only possible to add or update a user if you use a hosting plan. 
+Update will come soon.	

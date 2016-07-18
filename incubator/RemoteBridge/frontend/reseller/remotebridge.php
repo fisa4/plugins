@@ -1,7 +1,7 @@
 <?php
 /**
  * i-MSCP - internet Multi Server Control Panel
- * Copyright (C) 2010-2014 by i-MSCP Team
+ * Copyright (C) 2010-2016 by i-MSCP Team
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,11 +20,23 @@
  * @category    iMSCP
  * @package     iMSCP_Plugin
  * @subpackage  RemoteBridge
- * @copyright   2010-2014 by i-MSCP Team
+ * @copyright   2010-2016 by i-MSCP Team
  * @author      Sascha Bay <info@space2place.de>
+ * @author      Peter Ziergoebel <info@fisa4.de>
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
  */
+
+namespace RemoteBridge;
+
+use iMSCP_Database as Database;
+use iMSCP_Events as Events;
+use iMSCP_Events_Aggregator as EventManager;
+use iMSCP_Exception_Database as DatabaseException;
+use iMSCP_pTemplate as TemplateEngine;
+use iMSCP_Registry as Registry;
+use PDO;
+
 
 /***********************************************************************************************************************
  * Functions
@@ -54,6 +66,7 @@ function bridge_manageKEY()
 		}
 
 		if (!$error) {
+
 
 			if ($bridgeID === '-1') { // New Remote Bridge
 				$query = '
@@ -128,7 +141,7 @@ function bridge_deleteKEY()
 	} else {
 		showBadRequestErrorPage();
 	}
-}
+} 
 
 /**
  *
@@ -159,7 +172,7 @@ function runBridgeRequest()
 			}
 		}
 	}
-}
+} 
 
 /**
  * @param $bridgeKey
@@ -169,7 +182,7 @@ function addRemoteBridge($bridgeKey, $serverIpAddr)
 {
 	$query = "UPDATE `remote_bridge` SET  `bridge_status` = 'ok' WHERE `bridge_key` = ? AND `bridge_ipaddress` = ?";
 	exec_query($query, array($bridgeKey, $serverIpAddr));
-}
+} 
 
 /**
  * @param $bridgeKey
@@ -179,7 +192,7 @@ function updateRemoteBridge($bridgeKey, $serverIpAddr)
 {
 	$query = "UPDATE  `remote_bridge`  SET  `bridge_status` = 'ok'  WHERE  `bridge_key` = ? AND  `bridge_ipaddress` = ?";
 	exec_query($query, array($bridgeKey, $serverIpAddr));
-}
+} 
 
 /**
  * @param $bridgeKey
@@ -189,7 +202,7 @@ function deleteRemoteBridge($bridgeKey, $serverIpAddr)
 {
 	$query = "DELETE FROM `remote_bridge`  WHERE  `bridge_key` = ?  AND `bridge_ipaddress` = ?";
 	exec_query($query, array($bridgeKey, $serverIpAddr));
-}
+} 
 
 /**
  * Generate page.
@@ -199,7 +212,6 @@ function deleteRemoteBridge($bridgeKey, $serverIpAddr)
  */
 function bridge_generatePage($tpl)
 {
-
 	$query = 'SELECT * FROM `remote_bridge` WHERE `bridge_admin_id` = ?';
 	$stmt = exec_query($query, $_SESSION['user_id']);
 
@@ -258,7 +270,7 @@ function bridge_generatePage($tpl)
 				array(
 					'REMOTEBRIDGE_DIALOG_OPEN' => 1,
 					'BRIDGE_KEY' => tohtml($bridgeData['bridge_key']),
-					'BRIDGE_KEY_READONLY' => $cfg->HTML_READONLY,
+					'BRIDGE_KEY_READONLY' => ' readonly',
 					'BRIDGE_IPADDRESS' => tohtml($bridgeData['bridge_ipaddress']),
 					'BRIDGE_ID' => tohtml($bridgeID),
 					'ACTION' => 'edit'
@@ -272,7 +284,7 @@ function bridge_generatePage($tpl)
 			array(
 				'REMOTEBRIDGE_DIALOG_OPEN' => isset($_REQUEST['bridge_key']) ? 1 : 0,
 				'BRIDGE_KEY' => isset($_REQUEST['bridge_key']) ? tohtml($_REQUEST['bridge_key']) : '',
-				'BRIDGE_KEY_READONLY' => $cfg->HTML_READONLY,
+				'BRIDGE_KEY_READONLY' => ' readonly',
 				'BRIDGE_IPADDRESS' => isset($_REQUEST['bridge_ipaddress']) ? tohtml($_REQUEST['bridge_ipaddress']) : '',
 				'BRIDGE_ID' => '-1',
 				'ACTION' => 'add'
@@ -287,10 +299,9 @@ function bridge_generatePage($tpl)
 
 
 EventManager::getInstance()->dispatch(Events::onResellerScriptStart);
-
 check_login('reseller');
 
-if (iMSCP_Registry::isRegistered('pluginManager')) {
+if (Registry::isRegistered('pluginManager')) {
 	/** @var iMSCP_Plugin_Manager $pluginManager */
 	$pluginManager = Registry::get('pluginManager');
 } else {
@@ -318,11 +329,11 @@ if (isset($_REQUEST['action'])) {
 	}
 }
 
-$tpl = new iMSCP_pTemplate();
+$tpl = new TemplateEngine();
 $tpl->define_dynamic(
 	array(
 		'layout' => 'shared/layouts/ui.tpl',
-		'page' => '../../plugins/RemoteBridge/frontend/remotebridge.tpl',
+		'page' => '../../plugins/RemoteBridge/themes/default/view/reseller/remotebridge.tpl',
 		'page_message' => 'layout',
 		'bridge_lists' => 'page',
 		'bridge_list' => 'bridge_lists'
@@ -356,9 +367,5 @@ bridge_generatePage($tpl);
 generatePageMessage($tpl);
 
 $tpl->parse('LAYOUT_CONTENT', 'page');
-
-EventManager::getInstance()->dispatch(Events::onResellerScriptEnd, array('templateEngine' => $tpl));
-
+EventManager::getInstance()->dispatch(Events::onAdminScriptEnd, array('templateEngine' => $tpl));
 $tpl->prnt();
-
-unsetMessages();

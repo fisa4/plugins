@@ -1,7 +1,7 @@
 <?php
 /**
  * i-MSCP - internet Multi Server Control Panel
- * Copyright (C) 2010-2014 by i-MSCP Team
+ * Copyright (C) 2010-2016 by i-MSCP Team
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,9 +20,9 @@
  * @category    iMSCP
  * @package     iMSCP_Plugin
  * @subpackage  RemoteBridge
- * @copyright   2010-2014 by i-MSCP Team
+ * @copyright   2010-2016 by i-MSCP Team
  * @author      Sascha Bay <info@space2place.de>
- * @author      Peter Ziergöbel <info@fisa4.de>
+ * @author      Peter Ziergoebel <info@fisa4.de>
  * @author      Ninos Ego <me@ninosego.de>
  * @link        http://www.i-mscp.net i-MSCP Home Site
  * @license     http://www.gnu.org/licenses/gpl-2.0.html GPL v2
@@ -93,7 +93,7 @@ function addSqlUser($resellerId, $postData)
         'SELECT COUNT(`sqlu_id`) AS `count` FROM `sql_user` WHERE sqld_id = (SELECT sqld_id FROM sql_database WHERE `domain_id` = ?)', $domainId
     );
     $currentDatabaseUser =  $stmt->fields['count'];
-    echo $maxDbUser.' - '.$currentDatabaseUser;
+    
     if($maxDbUser != '0' && $currentDatabaseUser >= $maxDbUser){
         logoutReseller();
         exit(
@@ -343,7 +343,7 @@ function deleteSqlUser($resellerId, $postData)
 }
 
 /**
- * Create new database user
+ * Create new database 
  *
  * @param int $resellerId Reseller unique identifier
  * @param array $postData POST data
@@ -406,11 +406,14 @@ function addSqlDb($resellerId, $postData)
         );
     }
 
-    if ($usePrefix == TRUE && $prefixPos === 'start') {
+    if ($usePrefix == 'yes' && $prefixPos === 'start') {
         $dbName = $dbPrefix . "_" . $dbName;
-    } else if ($prefixPos === 'end') {
+    } else if ($usePrefix == 'yes' && $prefixPos === 'end') {
         $dbName = $dbName . "_" . $dbPrefix;
-    }
+    } if ($usePrefix == 'no') {
+        $dbName = $dbName;
+    } 
+
 
     if (strlen($dbName) > 64) {
         logoutReseller();
@@ -500,27 +503,28 @@ function addSqlDb($resellerId, $postData)
  */
 function editSqlUserPassword($resellerId, $postData)
 {
-    if (empty($postData['domain']) || empty($postData['password']) ||
-        empty($postData['password']) || empty($postData['password_confirmation']) ||
-        empty($postData['sql_user'])
+    if (empty($postData['domain']) || empty($postData['sql_user']) ||
+	empty($postData['password']) || empty($postData['password_confirmation'])
     ) {
         logoutReseller();
         exit(
         createJsonMessage(
             array(
                 'level' => 'Error',
-                'message' => 'Domain, SQL-User, password or password_confirmation the password.'
+                'message' => 'No domain, password, password_confirmation or sql_user in post data available.'
             )
         )
         );
     }
-    $logUser = (isset($postData['logUser'])) ? clean_input($postData['logUser']) : encode_idna($postData['domain']);
+    $logUser = (isset($postData['log_user'])) ? clean_input($postData['log_user']) : encode_idna($postData['domain']);
     $sqlUserName = (isset($postData['sql_user'])) ? clean_input($postData['sql_user']) : '';
     list(
-        $sqlUserId, $sqlUserHost, $oldSqlPassword
+        $sqlUserId, $oldSqlUserHost, $oldSqlPassword
         ) = getDbUserValues($sqlUserName);
-    $password = (isset($postData['password'])) ? clean_input($postData['password']) : '';
-    $passwordConfirmation = (isset($postData['password_confirmation'])) ? clean_input($postData['password_confirmation']) : '';
+    $password = (isset($postData['password'])) ? clean_input($postData['password']) : $oldSqlPassword;
+    $passwordConfirmation = (isset($postData['password_confirmation'])) ? clean_input($postData['password_confirmation']) : $oldSqlPassword;
+    $sqlUserHost = (isset($postData['user_host'])) ? clean_input($postData['user_host']) : $oldSqlUserHost;
+
     if ($password === '') {
         logoutReseller();
         exit(
@@ -555,20 +559,33 @@ function editSqlUserPassword($resellerId, $postData)
         );
     }
 
+    if ($sqlUserId <= 0) {
+        logoutReseller();
+        exit(
+        createJsonMessage(
+            array(
+                'level' => 'Error',
+                'message' => 'User not exists'
+            )
+        )
+        );
+    }
+
     $passwordUpdated = false;
     iMSCP_Events_Manager::getInstance()->dispatch(
         iMSCP_Events::onBeforeEditSqlUser, array('sqlUserId' => $sqlUserId));
     try {
         // Update SQL user password in the mysql system tables;
-        exec_query("SET PASSWORD FOR ?@? = PASSWORD(?)", array($sqlUserName, $sqlUserHost, $password));
-        $passwordUpdated = true;
+        exec_query("SET PASSWORD FOR ?@? = PASSWORD(?)", array($sqlUserName, $oldSqlUserHost, $password));
+	$passwordUpdated = true;
+
         // Update user password in the i-MSCP sql_user table;
         exec_query(
             'UPDATE sql_user SET sqlu_pass = ? WHERE sqlu_name = ? AND sqlu_host = ?',
-            array($password, $sqlUserName, $sqlUserHost)
+            array($password, $sqlUserName, $oldSqlUserHost)
         );
         write_log(
-            sprintf("%s updated %s@%s SQL user password.", $logUser, $sqlUserName, $sqlUserHost),
+            sprintf("%s updated %s@%s SQL user password.", $logUser, $sqlUserName, $oldSqlUserHost),
             E_USER_NOTICE
         );
         update_reseller_c_props($resellerId);
@@ -586,7 +603,7 @@ function editSqlUserPassword($resellerId, $postData)
     } catch (iMSCP_Exception_Database $e) {
         if ($passwordUpdated) {
             try {
-                exec_query("SET PASSWORD FOR ?@? = PASSWORD(?)", array($sqlUserName, $sqlUserHost, $oldSqlPassword));
+                exec_query("SET PASSWORD FOR ?@? = PASSWORD(?)", array($sqlUserName, $oldSqlUserHost, $oldSqlPassword));
             } catch (iMSCP_Exception_Database $f) {
             }
         }
@@ -594,7 +611,7 @@ function editSqlUserPassword($resellerId, $postData)
 }
 
 /**
- * Delete database user
+ * Delete database 
  *
  * @param int $resellerId Reseller unique identifier
  * @param array $postData POST data
@@ -669,6 +686,7 @@ function getSqlDb($postData)
     $stmt = exec_query('SELECT sqld_name FROM sql_database WHERE domain_id = ?',$domainId);
 
     if (!$stmt->rowCount()) {
+        logoutReseller();
         exit(
         createJsonMessage(
             array(

@@ -58,7 +58,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 	}
 
 	remoteBridgecheckPasswordSyntax($postData['admin_pass']);
-
+	$resellerName = $postData['reseller_username'];
 	$domain = strtolower($postData['domain']);
 	$dmnUsername = encode_idna($postData['domain']);
 
@@ -85,6 +85,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 		)
 		);
 	}
+
 
 	$pure_user_pass = urldecode($postData['admin_pass']);
 	$admin_pass = cryptPasswordWithSalt($pure_user_pass);
@@ -122,7 +123,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 			$query,
 			array(
 				$dmnUsername, $admin_pass, $resellerId, $fname, $lname, $firm, $zip, $city, $state, $country,
-				$userEmail, $phone, $fax, $street1, $street2, $customer_id, $gender, $cfg->ITEM_TOADD_STATUS
+				$userEmail, $phone, $fax, $street1, $street2, $customer_id, $gender, 'toadd'
 			)
 		);
 
@@ -204,7 +205,7 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 			$query,
 			array(
 				$dmnUsername, $recordId, time(), $dmnExpire, $domain_mailacc_limit, $domain_ftpacc_limit,
-				$domain_traffic_limit, $domain_sqld_limit, $domain_sqlu_limit, $cfg->ITEM_TOADD_STATUS,
+				$domain_traffic_limit, $domain_sqld_limit, $domain_sqlu_limit, 'toadd',
 				$domain_subd_limit, $domain_alias_limit, $domain_ip_id, $domain_disk_limit, 0, $domain_php, $domain_cgi,
 				$allowbackup, $domain_dns, $domain_software_allowed, $phpini_perm_system, $phpini_perm_allow_url_fopen,
 				$phpini_perm_display_errors, $phpini_perm_disable_functions, $domain_external_mail,
@@ -214,31 +215,33 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 
 		$domainId = $db->insertId();
 
-		if ($phpini_perm_system == 'yes') {
+		/* if ($phpini_perm_system == 'yes') {
 			$phpini = iMSCP_PHPini::getInstance();
 
-			$phpini->setData('phpiniSystem', 'yes');
-			$phpini->setData('phpiniPostMaxSize', (count($resellerHostingPlan) == 0)
+			$phpini->setClientPermission('phpiniSystem', 'yes');
+			$phpini->saveClientPermissions($domainId);
+
+			$phpini->setDomainIni('phpiniPostMaxSize', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_post_max_size'] : $resellerHostingPlan['phpini_post_max_size']);
-			$phpini->setData('phpiniUploadMaxFileSize', (count($resellerHostingPlan) == 0)
+			$phpini->setDomainIni('phpiniUploadMaxFileSize', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_upload_max_filesize'] : $resellerHostingPlan['phpini_upload_max_filesize']);
-			$phpini->setData('phpiniMaxExecutionTime', (count($resellerHostingPlan) == 0)
+			$phpini->setDomainIni('phpiniMaxExecutionTime', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_max_execution_time'] : $resellerHostingPlan['phpini_max_execution_time']);
-			$phpini->setData('phpiniMaxInputTime', (count($resellerHostingPlan) == 0)
+			$phpini->setDomainIni('phpiniMaxInputTime', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_max_input_time'] : $resellerHostingPlan['phpini_max_input_time']);
-			$phpini->setData('phpiniMemoryLimit', (count($resellerHostingPlan) == 0)
+			$phpini->setDomainIni('phpiniMemoryLimit', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_memory_limit'] : $resellerHostingPlan['phpini_memory_limit']);
 
-			$phpini->saveCustomPHPiniIntoDb($domainId);
-		}
+			$phpini->saveDomainInis($domainId);
+		} */
 
 		$query = "INSERT INTO `htaccess_users` (`dmn_id`, `uname`, `upass`, `status`) VALUES (?, ?, ?, ?)";
-		exec_query($query, array($domainId, $dmnUsername, cryptPasswordWithSalt($pure_user_pass), $cfg->ITEM_TOADD_STATUS));
+		exec_query($query, array($domainId, $dmnUsername, cryptPasswordWithSalt($pure_user_pass), 'toadd'));
 
 		$user_id = $db->insertId();
 
 		$query = 'INSERT INTO `htaccess_groups` (`dmn_id`, `ugroup`, `members`, `status`) VALUES (?, ?, ?, ?)';
-		exec_query($query, array($domainId, $cfg->WEBSTATS_GROUP_AUTH, $user_id, $cfg->ITEM_TOADD_STATUS));
+		exec_query($query, array($domainId, 'statistics', $user_id, 'toadd'));
 
 		// Create default addresses if needed
 		if ($cfg->CREATE_DEFAULT_EMAIL_ADDRESSES) {
@@ -270,14 +273,14 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
 		write_log(
 			sprintf(
 				"%s add user: " . $domain . " (for domain " . $domain . ") via remote bridge",
-				decode_idna($auth->getIdentity()->admin_name)
+				decode_idna($resellerName)
 			),
 			E_USER_NOTICE
 		);
 		write_log(
 			sprintf(
 				"%s add user: add domain: " . $domain . " via remote bridge",
-				decode_idna($auth->getIdentity()->admin_name)
+				decode_idna($resellerName)
 			),
 			E_USER_NOTICE
 		);
@@ -318,11 +321,8 @@ function createNewUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $p
  * @param string $domain Customer main domain name
  * @return void
  */
-function deleteUser($resellerId, $domain)
+function deleteUser($resellerId, $domain, $resellerName)
 {
-	//$db = iMSCP_Registry::get('db');
-	//$cfg = iMSCP_Registry::get('config');
-
 	$auth = iMSCP_Authentication::getInstance();
 
 	$dmnUsername = encode_idna($domain);
@@ -363,7 +363,7 @@ function deleteUser($resellerId, $domain)
 			);
 			write_log(
 				sprintf('%s scheduled deletion of the customer account: %s',
-					decode_idna($auth->getIdentity()->admin_name), $domain
+					decode_idna($resellerName), $domain
 				),
 				E_USER_NOTICE
 			);
@@ -432,13 +432,13 @@ function disableUser($resellerId, $domain)
 	if ($stmt->rowCount() && $stmt->fields['created_by'] == $resellerId) {
 		$customerId = $stmt->fields['domain_admin_id'];
 
-		if ($stmt->fields['domain_status'] == $cfg->ITEM_OK_STATUS) {
+		if ($stmt->fields['domain_status'] == 'ok') {
 			change_domain_status($customerId, 'deactivate');
 			send_request();
 			write_log(
 				sprintf(
 					'%s disabled the customer account: %s via remote bridge',
-					decode_idna($auth->getIdentity()->admin_name),
+					decode_idna($_SESSION['user_logged']),
 					$domain
 				),
 				E_USER_NOTICE
@@ -507,13 +507,13 @@ function enableUser($resellerId, $domain)
 	if ($stmt->rowCount() && $stmt->fields['created_by'] == $resellerId) {
 		$customerId = $stmt->fields['domain_admin_id'];
 
-		if ($stmt->fields['domain_status'] == $cfg->ITEM_DISABLED_STATUS) {
+		if ($stmt->fields['domain_status'] == 'disabled') {
 			change_domain_status($customerId, 'activate');
 			send_request();
 			write_log(
 				sprintf(
 					'%s activated the customer account: %s via remote bridge',
-					decode_idna($auth->getIdentity()->admin_name),
+					decode_idna($_SESSION['user_logged']),
 					$domain
 				),
 				E_USER_NOTICE
@@ -561,7 +561,7 @@ function enableUser($resellerId, $domain)
  */
 function collectUsageData($resellerId, $domain)
 {
-	$query = '
+	 $query = '
 		SELECT
 			domain_id
 		FROM
@@ -591,20 +591,30 @@ function collectUsageData($resellerId, $domain)
 	} else {
 		$usageData = array();
 		foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $domainId) {
-			list(
+		/*	list(
 				$domainName, $domainId, , , , , $trafficUsageBytes, $diskspaceUsageBytes
 				) = shared_getCustomerStats($domainId);
 			list(
 				$usub_current, $usub_max, $uals_current, $uals_max, $umail_current, $umail_max, $uftp_current, $uftp_max,
 				$usql_db_current, $usql_db_max, $usql_user_current, $usql_user_max, $trafficLimit, $diskspaceLimit
 				) = shared_getCustomerProps($domainId);
+		*/
+
+			list(
+				$domainName, $domainId, $web, $ftp, $smtp, $pop3, $trafficUsageBytes, $diskspaceUsageBytes
+			) = shared_getCustomerStats($adminId);
+			list(
+				$usub_current, $usub_max, $uals_current, $uals_max, $umail_current, $umail_max, $uftp_current, $uftp_max,
+				$usql_db_current, $usql_db_max, $usql_user_current, $usql_user_max, $trafficMaxMebimytes, $diskspaceMaxMebibytes
+			) = shared_getCustomerProps($adminId);
+
 			if ($domainName != 'n/a') {
 				$usageData[$domainName] = array(
 					'domain' => $domainName,
 					'disk_used' => $diskspaceUsageBytes,
-					'disk_limit' => $diskspaceLimit * 1048576,
+					'disk_limit' => $diskspaceMaxMebibytes * 1048576,
 					'bw_used' => $trafficUsageBytes,
-					'bw_limit' => $trafficLimit * 1048576,
+					'bw_limit' => $trafficMaxMebimytes * 1048576,
 					'subdomain_used' => $usub_current,
 					'subdomain_limit' => $usub_max,
 					'alias_used' => $uals_current,
@@ -638,7 +648,7 @@ function collectUsageData($resellerId, $domain)
 			)
 		)
 		);
-	}
+	} 
 }
 
 /**
@@ -719,6 +729,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 
 	$domain = strtolower($postData['domain']);
 	$dmnUsername = encode_idna($postData['domain']);
+	$resellerName = (isset($postData['reseller_name'])) ? clean_input(urldecode($postData['reseller_name'])) : '';
 
 	if (! imscp_domain_exists($dmnUsername, $resellerId)) {
 		logoutReseller();
@@ -731,9 +742,109 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 		)
 		);
 	}
-	$userEmail = (isset($postData['email'])) ? clean_input($postData['email']) :  '';
+
 	$domainId = getDomainIdByDomain($domain);
 	$customerId = getDomainAdminIdByDomainId($domainId);
+	$query = "SELECT * FROM `admin` WHERE `admin_id` = ?";
+	$stmt = exec_query(
+			$query,
+			array($customerId)
+	);
+
+
+	$userFirstName = (isset($postData['fname'])) ? clean_input($postData['fname']) :  $stmt->fields['fname'];
+	$userLastName = (isset($postData['lname'])) ? clean_input($postData['lname']) :  $stmt->fields['lname'];
+	$userGender = (isset($postData['gender'])) ? clean_input($postData['gender']) :  $stmt->fields['gender'];
+	$userFirm = (isset($postData['firm'])) ? clean_input($postData['firm']) :  $stmt->fields['firm'];
+	$userZip = (isset($postData['zip'])) ? clean_input($postData['zip']) :  $stmt->fields['zip'];
+	$userCity = (isset($postData['city'])) ? clean_input($postData['city']) :  $stmt->fields['city'];
+	$userState = (isset($postData['state'])) ? clean_input($postData['state']) :  $stmt->fields['state'];
+	$userCountry = (isset($postData['country'])) ? clean_input($postData['country']) :  $stmt->fields['country'];
+	$userEmail = (isset($postData['email'])) ? clean_input($postData['email']) :  $stmt->fields['email'];
+	$userPhone = (isset($postData['phone'])) ? clean_input($postData['phone']) :  $stmt->fields['phone'];
+	$userFax = (isset($postData['fax'])) ? clean_input($postData['fax']) :  $stmt->fields['fax'];
+	$userStreet1 = (isset($postData['street1'])) ? clean_input($postData['street1']) :  $stmt->fields['street1'];
+	$userStreet2 = (isset($postData['street2'])) ? clean_input($postData['street2']) :  $stmt->fields['street2'];
+	
+	try {
+		$db->beginTransaction();
+
+		iMSCP_Events_Manager::getInstance()->dispatch(
+			iMSCP_Events::onBeforeEditDomain,
+			array(
+				'domainName' => $dmnUsername,
+				'createdBy' => $resellerId,
+				'customerId' => $customerId,
+				'customerEmail' => $userEmail
+			)
+		);
+
+		$query = "
+		UPDATE
+			`admin`
+		SET
+			`fname` = ?, `lname` = ?, `gender` = ?,
+			`firm` = ?, `zip` = ?, `city` = ?,
+			`state` = ?, `country` = ?, `email` = ?, `phone` = ?,
+			`fax` = ?, `street1` = ?, `street2` = ?
+		WHERE
+			`admin_id` = ?
+			";
+echo $query . " - " . $customerId;
+		exec_query(
+			$query,
+			array(
+				$userFirstName, $userLastName, $userGender, 
+				$userFirm, $userZip, $userCity,
+				$userState, $userCountry, $userEmail, $userPhone,
+				$userFax, $userStreet1, $userStreet2, $customerId			)
+		);
+
+
+
+		update_reseller_c_props($resellerId);
+
+		$db->commit();
+
+		iMSCP_Events_Manager::getInstance()->dispatch(
+			iMSCP_Events::onAfterEditDomain,
+			array(
+				'domainName' => $dmnUsername,
+				'createdBy' => $resellerId,
+				'customerId' => $customerId,
+				'customerEmail' => $userEmail,
+				'domainId' => $domainId
+			)
+		);
+
+		send_request();
+
+		write_log(
+			sprintf(
+				"%s update user: " . $domain . " via remote bridge",
+				decode_idna($resellerName)
+			),
+			E_USER_NOTICE
+		);
+
+	} 
+	catch (iMSCP_Exception_Database $e) {
+		$db->rollBack();
+		logoutReseller();
+		exit(
+		createJsonMessage(
+			array(
+				'level' => 'Error',
+				'message' => sprintf(
+					'Error while updating user: %s, $s, %s', $e->getMessage(), $e->getQuery(), $e->getCode()
+				)
+			)
+		)
+		);
+	}
+
+
+
 	try {
 		$db->beginTransaction();
 
@@ -819,7 +930,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 			array(
 				$dmnExpire, time(), $domain_mailacc_limit,
 				$domain_ftpacc_limit, $domain_traffic_limit, $domain_sqld_limit,
-				$domain_sqlu_limit, $cfg->ITEM_TOCHANGE_STATUS,	$domain_alias_limit, $domain_subd_limit,
+				$domain_sqlu_limit, 'tochange',	$domain_alias_limit, $domain_subd_limit,
 				$domain_ip_id, $domain_disk_limit, $domain_php, $domain_cgi, $allowbackup,
 				$domain_dns, $domain_software_allowed, $phpini_perm_system,
 				$phpini_perm_allow_url_fopen, $phpini_perm_display_errors,
@@ -830,7 +941,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 
 		$domainId = $db->insertId();
 
-		if ($phpini_perm_system == 'yes') {
+		/* if ($phpini_perm_system == 'yes') {
 			$phpini = iMSCP_PHPini::getInstance();
 			$phpini->setData('phpiniSystem', 'yes');
 			$phpini->setData('phpiniPostMaxSize', (count($resellerHostingPlan) == 0)
@@ -844,7 +955,7 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 			$phpini->setData('phpiniMemoryLimit', (count($resellerHostingPlan) == 0)
 				? $postData['phpini_memory_limit'] : $resellerHostingPlan['phpini_memory_limit']);
 			$phpini->saveCustomPHPiniIntoDb($domainId);
-		}
+		} */
 
 		update_reseller_c_props($resellerId);
 
@@ -865,15 +976,8 @@ function updateUser($resellerId, $resellerHostingPlan, $resellerIpaddress, $post
 
 		write_log(
 			sprintf(
-				"%s update user: " . $domain . " (for domain " . $domain . ") via remote bridge",
-				decode_idna($auth->getIdentity()->admin_name)
-			),
-			E_USER_NOTICE
-		);
-		write_log(
-			sprintf(
-				"%s update user: update domain: " . $domain . " via remote bridge",
-				decode_idna($auth->getIdentity()->admin_name)
+				"%s update domain: " . $domain . " via remote bridge",
+				decode_idna($resellerName)
 			),
 			E_USER_NOTICE
 		);

@@ -1,7 +1,8 @@
 <?php
 /**
  * i-MSCP RemoteBridge plugin
- * Copyright (C) 2013-2016 Sascha Bay <info@space2place.de>
+ * Copyright (C) 2013-2015 Sascha Bay <info@space2place.de>
+ * Copyright (C) 2013-2016 Peter Ziergöbel <info@fisa4.de>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,18 +20,19 @@
  */
 
 return array(
-	'author' => array(
-		'Sascha Bay',
-		'Peter Ziergoebel',
-		'Ninos Ego',
-		'Thom Heemstra',
-		'Christian Wolf'
-	),
-	'email' => 'info@fisa4.de',
-	'version' => '1.0.0',
-	'require_api' => '1.0.0',
-	'date' => '2016-07-19',
-	'name' => 'RemoteBridge',
-	'desc' => 'Plugin which provides a RemoteBridge implementation for i-MSCP. It is not supported by i-MSCP Team. Only by FISA4 (info@fisa4.de)',
-	'url' => 'http://wiki.i-mscp.net/doku.php?id=plugins:remotebridge'
+	'up' => '
+		CREATE TABLE IF NOT EXISTS `remote_bridge` (
+				`bridge_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+				`bridge_admin_id` int(11) unsigned NOT NULL,
+				`bridge_ipaddress` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+				`bridge_key` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+				`bridge_status` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+				PRIMARY KEY (`bridge_id`),
+				UNIQUE KEY `bridge_api_key` (`bridge_admin_id`, `bridge_ipaddress`),
+				KEY `bridge_admin_id` (`bridge_admin_id`)
+			) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+	',
+	'down' => '
+		DROP TABLE IF EXISTS `remote_bridge`
+	'
 );
